@@ -1,42 +1,74 @@
 const axios = require('axios');
 const { mockPhrases } = require('../data/mockData');
 
-// 28 Supported Languages ISO-639 Mapping
-const SUPPORTED_LANGUAGES = {
-  'English': 'en',
-  'Hindi': 'hi',
-  'Bengali': 'bn',
-  'Spanish': 'es',
-  'French': 'fr',
-  'German': 'de',
-  'Italian': 'it',
-  'Japanese': 'ja',
-  'Chinese (Simplified)': 'zh',
-  'Arabic': 'ar',
-  'Portuguese': 'pt',
-  'Russian': 'ru',
-  'Korean': 'ko',
-  'Dutch': 'nl',
-  'Turkish': 'tr',
-  'Greek': 'el',
-  'Thai': 'th',
-  'Vietnamese': 'vi',
-  'Indonesian': 'id',
-  'Polish': 'pl',
-  'Swedish': 'sv',
-  'Czech': 'cs',
-  'Tamil': 'ta',
-  'Telugu': 'te',
-  'Marathi': 'mr',
-  'Gujarati': 'gu',
-  'Punjabi': 'pa',
-  'Malayalam': 'ml',
+const CODE_TO_NAME = {
+  'en': 'English',
+  'hi': 'Hindi',
+  'bn': 'Bengali',
+  'es': 'Spanish',
+  'fr': 'French',
+  'de': 'German',
+  'it': 'Italian',
+  'ja': 'Japanese',
+  'zh': 'Chinese (Simplified)',
+  'ar': 'Arabic',
+  'pt': 'Portuguese',
+  'ru': 'Russian',
+  'ko': 'Korean',
+  'nl': 'Dutch',
+  'tr': 'Turkish',
+  'th': 'Thai',
+  'ta': 'Tamil',
+  'te': 'Telugu',
+  'mr': 'Marathi',
+  'gu': 'Gujarati',
+  'pa': 'Punjabi',
+  'ml': 'Malayalam',
+};
+
+const NAME_TO_CODE = {
+  'english': 'en', 'en': 'en',
+  'hindi': 'hi', 'hi': 'hi',
+  'bengali': 'bn', 'bn': 'bn',
+  'spanish': 'es', 'es': 'es',
+  'french': 'fr', 'fr': 'fr',
+  'german': 'de', 'de': 'de',
+  'italian': 'it', 'it': 'it',
+  'japanese': 'ja', 'ja': 'ja',
+  'chinese': 'zh', 'zh': 'zh',
+  'arabic': 'ar', 'ar': 'ar',
+  'portuguese': 'pt', 'pt': 'pt',
+  'russian': 'ru', 'ru': 'ru',
+  'korean': 'ko', 'ko': 'ko',
+  'dutch': 'nl', 'nl': 'nl',
+  'turkish': 'tr', 'tr': 'tr',
+  'thai': 'th', 'th': 'th',
+  'tamil': 'ta', 'ta': 'ta',
+  'telugu': 'te', 'te': 'te',
+  'marathi': 'mr', 'mr': 'mr',
+  'gujarati': 'gu', 'gu': 'gu',
+  'punjabi': 'pa', 'pa': 'pa',
+  'malayalam': 'ml', 'ml': 'ml',
+};
+
+const getLangCode = (langStr) => {
+  if (!langStr) return 'en';
+  const clean = langStr.toLowerCase().trim();
+  return NAME_TO_CODE[clean] || (clean.length === 2 ? clean : 'en');
+};
+
+const getLangName = (langStr) => {
+  const code = getLangCode(langStr);
+  return CODE_TO_NAME[code] || langStr;
 };
 
 // Helper: Call OpenAI GPT for Translation if OPENAI_API_KEY exists
 const translateWithOpenAI = async (text, sourceLang, targetLang) => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey || !apiKey.startsWith('sk-')) return null;
+
+  const srcName = getLangName(sourceLang);
+  const tgtName = getLangName(targetLang);
 
   try {
     const res = await axios.post(
@@ -50,7 +82,7 @@ const translateWithOpenAI = async (text, sourceLang, targetLang) => {
           },
           {
             role: 'user',
-            content: `Translate from ${sourceLang} to ${targetLang}: "${text}"`
+            content: `Translate from ${srcName} to ${tgtName}: "${text}"`
           }
         ],
         max_tokens: 300,
@@ -72,7 +104,7 @@ const translateWithOpenAI = async (text, sourceLang, targetLang) => {
         const parsed = JSON.parse(match[0]);
         return {
           translatedText: parsed.translatedText,
-          pronunciation: parsed.pronunciation || `(${parsed.translatedText} in ${targetLang})`,
+          pronunciation: parsed.pronunciation || `(${parsed.translatedText} in ${tgtName})`,
           provider: 'OpenAI GPT-4o AI'
         };
       }
@@ -85,8 +117,10 @@ const translateWithOpenAI = async (text, sourceLang, targetLang) => {
 
 // Helper: Call MyMemory Free Translation API
 const translateWithMyMemory = async (text, sourceLang, targetLang) => {
-  const src = SUPPORTED_LANGUAGES[sourceLang] || 'en';
-  const tgt = SUPPORTED_LANGUAGES[targetLang] || 'hi';
+  const src = getLangCode(sourceLang);
+  const tgt = getLangCode(targetLang);
+  const tgtName = getLangName(targetLang);
+
   try {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`;
     const res = await axios.get(url, { timeout: 5000 });
@@ -94,7 +128,7 @@ const translateWithMyMemory = async (text, sourceLang, targetLang) => {
       const translated = res.data.responseData.translatedText;
       return {
         translatedText: translated,
-        pronunciation: `Phonetic (${targetLang}): ${translated}`,
+        pronunciation: `Phonetic (${tgtName}): ${translated}`,
         provider: 'MyMemory Live Translation API'
       };
     }
@@ -106,31 +140,36 @@ const translateWithMyMemory = async (text, sourceLang, targetLang) => {
 
 const translateText = async (req, res) => {
   try {
-    const { text, sourceLang = 'English', targetLang = 'Hindi' } = req.body;
+    const { text, sourceLang = 'en', targetLang = 'bn' } = req.body;
     if (!text) {
       return res.status(400).json({ success: false, message: 'Text to translate is required.' });
     }
 
+    const srcCode = getLangCode(sourceLang);
+    const tgtCode = getLangCode(targetLang);
+    const srcName = getLangName(sourceLang);
+    const tgtName = getLangName(targetLang);
+
     // 1. Try OpenAI GPT Translation if key is configured
-    const openAIResult = await translateWithOpenAI(text, sourceLang, targetLang);
+    const openAIResult = await translateWithOpenAI(text, srcName, tgtName);
     if (openAIResult) {
       return res.json({
         success: true,
         originalText: text,
-        sourceLang,
-        targetLang,
+        sourceLang: srcName,
+        targetLang: tgtName,
         ...openAIResult
       });
     }
 
     // 2. Try MyMemory Free Live API
-    const myMemoryResult = await translateWithMyMemory(text, sourceLang, targetLang);
+    const myMemoryResult = await translateWithMyMemory(text, srcCode, tgtCode);
     if (myMemoryResult) {
       return res.json({
         success: true,
         originalText: text,
-        sourceLang,
-        targetLang,
+        sourceLang: srcName,
+        targetLang: tgtName,
         ...myMemoryResult
       });
     }
@@ -139,10 +178,10 @@ const translateText = async (req, res) => {
     return res.json({
       success: true,
       originalText: text,
-      sourceLang,
-      targetLang,
-      translatedText: `[${targetLang}]: ${text}`,
-      pronunciation: `(${text} in ${targetLang} script)`,
+      sourceLang: srcName,
+      targetLang: tgtName,
+      translatedText: `[${tgtName}]: ${text}`,
+      pronunciation: `(${text} in ${tgtName} script)`,
       provider: 'TravelGenie Translator Engine'
     });
   } catch (error) {
@@ -152,10 +191,15 @@ const translateText = async (req, res) => {
 
 const getTravelPhrases = async (req, res) => {
   try {
-    return res.json({ success: true, count: mockPhrases.length, phrases: mockPhrases, languages: Object.keys(SUPPORTED_LANGUAGES) });
+    return res.json({
+      success: true,
+      count: mockPhrases.length,
+      phrases: mockPhrases,
+      languages: Object.values(CODE_TO_NAME)
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to fetch phrasebook.' });
   }
 };
 
-module.exports = { translateText, getTravelPhrases, SUPPORTED_LANGUAGES };
+module.exports = { translateText, getTravelPhrases, SUPPORTED_LANGUAGES: CODE_TO_NAME };
