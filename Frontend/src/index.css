@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #fdfbf7;
+    color: #1c1917;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* High-Contrast Input & Form Control Styling */
+  input, textarea, select {
+    background-color: #f5efe6 !important;
+    color: #1c1917 !important;
+    border-color: #e2dad0 !important;
+    caret-color: #c85a44 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important; /* 14px */
+    letter-spacing: 0.01em !important;
+    -webkit-text-fill-color: #1c1917 !important;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: #c85a44 !important;
+    box-shadow: 0 0 0 3px rgba(200, 90, 68, 0.15) !important;
+  }
+
+  /* Fix Chrome / Edge Autofill yellow background */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #1c1917 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #f5efe6 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #948e85 !important;
+    font-weight: 400 !important;
+    -webkit-text-fill-color: #948e85 !important;
+  }
+
+  option {
+    background-color: #fdfbf7 !important;
+    color: #1c1917 !important;
+    font-weight: 600 !important;
+  }
+}
+
+@layer utilities {
+  .airmail-border {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #c85a44,
+      #c85a44 12px,
+      #fdfbf7 12px,
+      #fdfbf7 20px,
+      #2b4c30 20px,
+      #2b4c30 32px,
+      #fdfbf7 32px,
+      #fdfbf7 40px
+    );
+  }
+
+  .card-cream {
+    background-color: #ffffff;
+    border: 1px solid #e2dad0;
+    box-shadow: 0 4px 16px -2px rgba(28, 25, 23, 0.04);
+  }
+
+  .card-warm {
+    background-color: #f5efe6;
+    border: 1px solid #e2dad0;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fdfbf7;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2dad0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c85a44;
+}
+
+/* Custom Leaflet Map container */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.5rem;
+  z-index: 10;
+  border: 1px solid #e2dad0;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "travelgenie-root",
+  "version": "1.0.0",
+  "description": "TravelGenie - Your Smart AI Travel Companion (Full-Stack Monorepo)",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install --prefix Backend && npm install --prefix Frontend",
+    "build": "npm run build --prefix Frontend",
+    "start": "npm start --prefix Backend",
+    "seed": "npm run seed --prefix Backend"
+  },
+  "keywords": ["travel", "ai", "hackathon", "express", "mongodb", "react", "vite"],
+  "author": "TravelGenie Team",
+  "license": "ISC"
+}
