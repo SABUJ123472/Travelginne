@@ -181,7 +181,7 @@ export default function AITripPlannerPage() {
                   min="1"
                   max="14"
                   value={days}
-                  onChange={(e) => setDays(e.target.value)}
+                  onChange={(e) => setDays(Number(e.target.value))}
                   className="w-full accent-[#c85a44] cursor-pointer"
                 />
               </div>
@@ -237,7 +237,7 @@ export default function AITripPlannerPage() {
               ) : (
                 <Sparkles className="w-4 h-4 text-[#d96b52]" />
               )}
-              <span>{loading ? 'Compiling Field Guide...' : 'Draft Itinerary'}</span>
+              <span>{loading ? 'Compiling Field Guide...' : `Draft ${days}-Day Itinerary`}</span>
             </button>
           </form>
         </div>
@@ -269,7 +269,7 @@ export default function AITripPlannerPage() {
             ✦
           </div>
           <h2 className="text-2xl sm:text-3xl font-heritage font-extrabold text-stone-900">
-            The Generated Manifest
+            {itinerary ? `${itinerary.days?.length || days}-Day Generated Manifest` : 'The Generated Manifest'}
           </h2>
           <p className="text-xs text-stone-600 leading-relaxed">
             A curated sequence of events based on your parameters.
@@ -301,7 +301,7 @@ export default function AITripPlannerPage() {
             toAddress={`${destination} Center`}
             destinationName={destination}
             waypoints={itinerary.days?.flatMap(d => d.activities || [])}
-            title={`Expedition Route: ${destination}`}
+            title={`Expedition Route (${itinerary.days?.length || days} Days): ${destination}`}
             height="380px"
           />
         )}
@@ -318,7 +318,7 @@ export default function AITripPlannerPage() {
                 {/* Day Header */}
                 <div className={`col-span-5 ${idx % 2 === 0 ? 'text-right pr-6' : 'col-start-7 pl-6'}`}>
                   <span className="text-xl font-heritage font-extrabold text-stone-900 block">
-                    Day 0{idx + 1}
+                    Day {String(idx + 1).padStart(2, '0')}
                   </span>
                   <span className="text-[10px] font-bold text-[#c85a44] uppercase tracking-widest block">
                     {day.theme || 'EXPLORATIONS'}

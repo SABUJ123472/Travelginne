@@ -100,7 +100,7 @@ const TRANSPORT_BY_CITY = {
   barcelona:  'TMB Metro, Bicing Bike, Cable Car',
   istanbul:   'Istanbulkart Metro/Tram, Bosphorus Ferry',
   cairo:      'Cairo Metro, Yellow Cab, Nile Felucca',
-  sydney:     'Sydney Trains, Opal Card, Manly Ferry',
+  sydney:     'Sydney Trains, Opal Card, Manly Beach Ferry',
   delhi:      'Delhi Metro, Auto Rickshaw, Uber',
   mumbai:     'Local Trains, Auto Rickshaw, TAXI',
   varanasi:   'Cycle Rickshaw, Auto, River Boat',
@@ -112,17 +112,25 @@ const TRANSPORT_BY_CITY = {
 const generateItineraryAI = async (params) => {
   const {
     destination = 'Kolkata',
+    days: inputDays,
+    duration,
+    numDays: inputNumDays,
     startDate = '',
     endDate = '',
     travelers = 2,
     budgetType = 'Moderate',
+    budgetCategory = 'Moderate',
     customBudget,
     travelStyles = ['Cultural', 'Heritage'],
   } = params;
 
-  const numDays = startDate && endDate
-    ? Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))
-    : 3;
+  // Explicitly extract days selection from input parameter!
+  const requestedDays = inputDays || duration || inputNumDays;
+  const numDays = requestedDays
+    ? Math.min(14, Math.max(1, Number(requestedDays)))
+    : (startDate && endDate
+        ? Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))
+        : 3);
 
   const cityName = destination.trim();
   const lowerCity = cityName.toLowerCase();
@@ -140,8 +148,9 @@ const generateItineraryAI = async (params) => {
   const localFood = FOOD_BY_CITY[lowerCity] || `Authentic ${cityName} Local Dishes`;
   const transport = TRANSPORT_BY_CITY[lowerCity] || `Public Metro & Taxi`;
 
-  const perDayBudgetMap = { Budget: 2500, Moderate: 6000, Luxury: 18000 };
-  const baseBudget = customBudget || (perDayBudgetMap[budgetType] || 6000) * numDays * travelers;
+  const effBudgetCategory = budgetType || budgetCategory || 'Moderate';
+  const perDayBudgetMap = { Shoestring: 2500, Budget: 2500, Moderate: 6000, Standard: 6000, Opulent: 18000, Luxury: 18000 };
+  const baseBudget = customBudget || (perDayBudgetMap[effBudgetCategory] || 6000) * numDays * travelers;
 
   const days = [];
   for (let i = 0; i < numDays; i++) {
@@ -158,7 +167,7 @@ const generateItineraryAI = async (params) => {
         activity: `Visit ${spot1}`,
         description: `Explore historical architecture, exhibits, and photo spots at ${spot1}.`,
         location: `${spot1}, ${cityName}`,
-        cost: budgetType === 'Budget' ? 100 : 350,
+        cost: effBudgetCategory === 'Shoestring' || effBudgetCategory === 'Budget' ? 100 : 350,
       },
       {
         name: `${cityName} Culinary Spot`,
@@ -167,7 +176,7 @@ const generateItineraryAI = async (params) => {
         activity: `Local Culinary Lunch — ${foodDish.trim()}`,
         description: `Sample regional specialties in ${cityName}: ${foodDish.trim()}.`,
         location: `${landmarks[0]}, ${cityName}`,
-        cost: budgetType === 'Budget' ? 200 : 600,
+        cost: effBudgetCategory === 'Shoestring' || effBudgetCategory === 'Budget' ? 200 : 600,
       },
       {
         name: spot2,
@@ -176,7 +185,7 @@ const generateItineraryAI = async (params) => {
         activity: `Sightseeing at ${spot2}`,
         description: `Discover local culture, artisan shops, and heritage around ${spot2}.`,
         location: `${spot2}, ${cityName}`,
-        cost: budgetType === 'Budget' ? 150 : 400,
+        cost: effBudgetCategory === 'Shoestring' || effBudgetCategory === 'Budget' ? 150 : 400,
       },
       {
         name: `${cityName} Evening Market`,
@@ -185,12 +194,13 @@ const generateItineraryAI = async (params) => {
         activity: `Evening Cultural Market Tour`,
         description: `Stroll through illuminated evening markets. Recommended transport: ${transport.split(',')[0]}.`,
         location: `${spot2}, ${cityName}`,
-        cost: budgetType === 'Budget' ? 250 : 700,
+        cost: effBudgetCategory === 'Shoestring' || effBudgetCategory === 'Budget' ? 250 : 700,
       }
     ];
 
     days.push({
       day: i + 1,
+      theme: i === 0 ? 'ARRIVAL & HIGHLIGHTS' : i === numDays - 1 ? 'HIDDEN GEMS & FAREWELL' : `HERITAGE EXPLORATION DAY ${i + 1}`,
       title: `Day ${i + 1}: ${i === 0 ? `Arrival & Highlights of ${cityName}` : i === numDays - 1 ? `Hidden Gems & Farewell — ${cityName}` : `Exploring ${cityName} — Day ${i + 1}`}`,
       activities,
     });
@@ -205,15 +215,17 @@ const generateItineraryAI = async (params) => {
 
   return {
     destination: cityName,
+    daysCount: numDays,
     cityCoordinates: cityCoords,
-    startDate, endDate, travelers, budgetType,
+    startDate, endDate, travelers, budgetType: effBudgetCategory,
     customBudget: baseBudget,
+    estimatedCost: baseBudget,
     travelStyles,
     days,
     budgetBreakdown: { accommodation, food: foodBudget, transport: transportBudget, activities: actBudget, shopping, emergency, total: baseBudget },
     sustainabilityScore: 88,
     localScore: 92,
-    explanation: `TravelGenie AI generated this ${numDays}-day itinerary for ${cityName} based on your ${budgetType} budget (₹${baseBudget.toLocaleString()}), focusing on ${travelStyles.join(', ')}.`,
+    explanation: `TravelGenie AI generated this ${numDays}-day itinerary for ${cityName} based on your ${effBudgetCategory} budget (₹${baseBudget.toLocaleString()}), focusing on ${travelStyles.join(', ')}.`,
   };
 };
 
