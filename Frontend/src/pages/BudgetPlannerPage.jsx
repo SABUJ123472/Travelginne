@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import {
-  Wallet, DollarSign, PieChart as PieIcon, Plus, Download,
+  Wallet, IndianRupee, PieChart as PieIcon, Plus, Download,
   Bed, Utensils, Bus, ShoppingBag, ArrowUpRight
 } from 'lucide-react';
 
 export default function BudgetPlannerPage() {
-  const [totalAllocation, setTotalAllocation] = useState(4500);
+  const [totalAllocation, setTotalAllocation] = useState(35000);
 
   const accommodationItems = [
-    { name: 'Grand Hotel Excelsior (3 Nights)', cost: 1200 },
-    { name: 'Villa Positano Airbnb (2 Nights)', cost: 650 },
-    { name: 'City Tax / Resort Fees', cost: 45 },
+    { name: 'The Oberoi Grand Kolkata (3 Nights)', cost: 12000 },
+    { name: 'Heritage Rajbari Eco Resort (2 Nights)', cost: 6500 },
+    { name: 'City Tourism Tax / Service Fees', cost: 450 },
   ];
 
   const foodItems = [
-    { name: 'Ristorante La Sponda (Dinner)', cost: 320 },
-    { name: 'Daily Gelato Allowance', cost: 50 },
-    { name: 'Market Provisions (Wine, Cheese)', cost: 115 },
+    { name: 'Peter Cat & Mocambo Dining', cost: 3200 },
+    { name: 'Daily Mishti & Tea Allowance', cost: 500 },
+    { name: 'Market Provisions (Sweets, Snacks)', cost: 1150 },
   ];
 
   const transitItems = [
-    { name: 'Ferry: Naples to Sorrento', cost: 85 },
-    { name: 'Private Boat Charter (Capri)', cost: 350 },
-    { name: 'SITA Bus Tickets', cost: 25 },
+    { name: 'Kolkata Metro & Hooghly Ferry', cost: 850 },
+    { name: 'Private AC Cab Tour', cost: 3500 },
+    { name: 'Auto & Yellow Taxi Conveyance', cost: 450 },
   ];
 
   const subtotalAcc = accommodationItems.reduce((a, b) => a + b.cost, 0);
@@ -56,27 +56,30 @@ export default function BudgetPlannerPage() {
           </p>
         </div>
 
-        {/* Approved Ledger Summary Card */}
-        <div className="lg:col-span-4 p-5 rounded-3xl bg-white border border-[#e2dad0] shadow-sm space-y-3 relative">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">STATUS</span>
-            <span className="text-[10px] font-bold text-[#2b4c30] bg-[#c3dec9] px-2.5 py-0.5 rounded-full border border-[#a8caa7]">
-              Approved
+        {/* Financial Overview Card */}
+        <div className="lg:col-span-4 p-5 rounded-2xl bg-white border border-[#e2dad0] space-y-3 shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#e2dad0] pb-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-900">
+              <IndianRupee className="w-4 h-4 text-[#c85a44]" />
+              <span>Financial Ledger</span>
+            </div>
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+              2026 LOG
             </span>
           </div>
 
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between text-stone-600 font-medium">
               <span>Total Allocation</span>
-              <strong className="text-stone-900 font-bold">${totalAllocation.toLocaleString()}</strong>
+              <strong className="text-stone-900 font-bold">₹{totalAllocation.toLocaleString()}</strong>
             </div>
             <div className="flex justify-between text-stone-600 font-medium">
               <span>Expenditure</span>
-              <strong className="text-[#c85a44] font-bold">${totalExpenditure.toLocaleString()}</strong>
+              <strong className="text-[#c85a44] font-bold">₹{totalExpenditure.toLocaleString()}</strong>
             </div>
             <div className="flex justify-between border-t border-[#e2dad0] pt-1.5 font-bold">
               <span className="text-[#c85a44]">Remaining Balance</span>
-              <span className="text-[#2b4c30]">${remainingBalance.toLocaleString()}</span>
+              <span className="text-[#2b4c30]">₹{remainingBalance.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -114,14 +117,14 @@ export default function BudgetPlannerPage() {
               {accommodationItems.map((item, i) => (
                 <div key={i} className="flex justify-between text-stone-700 font-medium">
                   <span>{item.name}</span>
-                  <strong className="text-stone-900 font-bold">${item.cost}</strong>
+                  <strong className="text-stone-900 font-bold">₹{item.cost.toLocaleString()}</strong>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between border-t border-[#e2dad0] pt-3 text-xs font-heritage font-extrabold text-[#c85a44]">
               <span>SUBTOTAL</span>
-              <span>${subtotalAcc}</span>
+              <span>₹{subtotalAcc.toLocaleString()}</span>
             </div>
           </div>
 
@@ -150,14 +153,14 @@ export default function BudgetPlannerPage() {
               {foodItems.map((item, i) => (
                 <div key={i} className="flex justify-between text-stone-700 font-medium">
                   <span>{item.name}</span>
-                  <strong className="text-stone-900 font-bold">${item.cost}</strong>
+                  <strong className="text-stone-900 font-bold">₹{item.cost.toLocaleString()}</strong>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between border-t border-[#e2dad0] pt-3 text-xs font-heritage font-extrabold text-[#c85a44]">
               <span>SUBTOTAL</span>
-              <span>${subtotalFood}</span>
+              <span>₹{subtotalFood.toLocaleString()}</span>
             </div>
           </div>
 
@@ -186,14 +189,14 @@ export default function BudgetPlannerPage() {
               {transitItems.map((item, i) => (
                 <div key={i} className="flex justify-between text-stone-700 font-medium">
                   <span>{item.name}</span>
-                  <strong className="text-stone-900 font-bold">${item.cost}</strong>
+                  <strong className="text-stone-900 font-bold">₹{item.cost.toLocaleString()}</strong>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between border-t border-[#e2dad0] pt-3 text-xs font-heritage font-extrabold text-[#c85a44]">
               <span>SUBTOTAL</span>
-              <span>${subtotalTransit}</span>
+              <span>₹{subtotalTransit.toLocaleString()}</span>
             </div>
           </div>
 
@@ -208,42 +211,28 @@ export default function BudgetPlannerPage() {
             {/* Circular Donut Diagram matching Google Stitch */}
             <div className="w-36 h-36 rounded-full border-8 border-[#c85a44] border-t-amber-400 border-r-emerald-500 flex flex-col items-center justify-center mx-auto my-2 shadow-sm bg-[#faf8f5]">
               <span className="text-[10px] font-bold text-stone-400 uppercase">TOTAL</span>
-              <span className="text-xl font-heritage font-extrabold text-stone-900">${(totalExpenditure/1000).toFixed(1)}k</span>
+              <span className="text-lg font-heritage font-extrabold text-stone-900">₹{totalExpenditure.toLocaleString()}</span>
             </div>
 
-            {/* Breakdown Legend */}
-            <div className="space-y-2 text-left text-xs font-medium text-stone-700 pt-2 border-t border-[#e2dad0]">
+            <div className="space-y-2 text-xs text-left">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-[#c85a44]" /> Accommodation
+                <span className="flex items-center gap-1.5 text-stone-600 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#c85a44]" /> Accommodation
                 </span>
-                <strong className="text-stone-900 font-bold">66%</strong>
+                <strong className="text-stone-900 font-bold">₹{subtotalAcc.toLocaleString()}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-400" /> Food & Provisions
+                <span className="flex items-center gap-1.5 text-stone-600 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Food & Provisions
                 </span>
-                <strong className="text-stone-900 font-bold">17%</strong>
+                <strong className="text-stone-900 font-bold">₹{subtotalFood.toLocaleString()}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Transit
+                <span className="flex items-center gap-1.5 text-stone-600 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Transit & Conveyance
                 </span>
-                <strong className="text-stone-900 font-bold">16%</strong>
+                <strong className="text-stone-900 font-bold">₹{subtotalTransit.toLocaleString()}</strong>
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
-              <button className="w-full py-2.5 rounded-xl bg-[#c85a44] text-white font-bold text-xs hover:bg-[#a54431] transition-colors shadow-sm flex items-center justify-center gap-1.5">
-                <Plus className="w-4 h-4" />
-                <span>RECORD EXPENSE</span>
-              </button>
-
-              <button className="w-full py-2.5 rounded-xl bg-[#f2eee5] border border-[#e2dad0] text-stone-800 font-bold text-xs hover:bg-[#e6e0d4] transition-colors flex items-center justify-center gap-1.5">
-                <Download className="w-4 h-4 text-stone-600" />
-                <span>EXPORT LEDGER</span>
-              </button>
             </div>
           </div>
 
