@@ -23,6 +23,29 @@ const CITY_DEFAULT_COORDS = {
   gurgaon:    { lat: 28.4595, lng: 77.0266 },
 };
 
+const PRESET_LANDMARK_COORDS = {
+  'howrah station':     { lat: 22.5851, lng: 88.3468 },
+  'howrah bridge':      { lat: 22.5851, lng: 88.3468 },
+  'park street':        { lat: 22.5534, lng: 88.3524 },
+  'victoria memorial':  { lat: 22.5448, lng: 88.3426 },
+  'kumartuli':          { lat: 22.5976, lng: 88.3619 },
+  'college street':     { lat: 22.5744, lng: 88.3629 },
+  'princep ghat':       { lat: 22.5562, lng: 88.3361 },
+  'newtown':            { lat: 22.5726, lng: 88.4639 },
+  'new town':           { lat: 22.5726, lng: 88.4639 },
+  'salt lake':          { lat: 22.5867, lng: 88.4171 },
+  'sealdah station':    { lat: 22.5675, lng: 88.3712 },
+  'eiffel tower':       { lat: 48.8584, lng: 2.2945 },
+  'louvre':             { lat: 48.8606, lng: 2.3376 },
+  'colosseum':          { lat: 41.8902, lng: 12.4922 },
+  'senso-ji':           { lat: 35.7148, lng: 139.7967 },
+  'shibuya':            { lat: 35.6580, lng: 139.7016 },
+  'times square':       { lat: 40.7580, lng: -73.9855 },
+  'central park':       { lat: 40.7829, lng: -73.9654 },
+};
+
+const GEOCODE_CACHE = new Map();
+
 const startIcon = L.divIcon({
   className: 'custom-start-marker',
   html: `<div style="background-color:#10b981; width:28px; height:28px; border-radius:50%; border:3px solid white; box-shadow:0 4px 6px -1px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:12px;">S</div>`,
@@ -62,7 +85,6 @@ export default function JourneyMap({
   const [resolvedFrom, setResolvedFrom] = useState(fromCoords || null);
   const [resolvedTo, setResolvedTo] = useState(toCoords || null);
   const [resolvedWaypoints, setResolvedWaypoints] = useState([]);
-  const [geocoding, setGeocoding] = useState(false);
 
   const waypointsKey = useMemo(() => JSON.stringify(waypoints || []), [waypoints]);
   const fromCoordsKey = fromCoords ? `${fromCoords.lat},${fromCoords.lng}` : '';
@@ -71,7 +93,7 @@ export default function JourneyMap({
   const cleanQuery = (str) => {
     if (!str) return '';
     return str
-      .replace(/^(Visit|Sightseeing at|Exploration of|Check-in at|Explore|Tour of)\s+/i, '')
+      .replace(/^(Visit|Sightseeing at|Exploration of|Check-in at|Explore|Tour of|Start)\s+/i, '')
       .trim();
   };
 
@@ -79,17 +101,35 @@ export default function JourneyMap({
     const cleaned = cleanQuery(query);
     if (!cleaned) return null;
 
+    const cacheKey = cleaned.toLowerCase();
+    if (GEOCODE_CACHE.has(cacheKey)) {
+      return GEOCODE_CACHE.get(cacheKey);
+    }
+
+    // 1. Instant Preset Lookup
+    for (const [key, coords] of Object.entries(PRESET_LANDMARK_COORDS)) {
+      if (cacheKey.includes(key)) {
+        const result = { lat: coords.lat, lng: coords.lng, name: query };
+        GEOCODE_CACHE.set(cacheKey, result);
+        return result;
+      }
+    }
+
+    // 2. LocationIQ Geocoding API
     try {
       const url = `https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(cleaned)}&format=json&limit=1`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
-          return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name };
+          const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name };
+          GEOCODE_CACHE.set(cacheKey, result);
+          return result;
         }
       }
     } catch (e) {}
 
+    // 3. Nominatim Fallback
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&limit=1`, {
         headers: { 'User-Agent': 'TravelGenieApp/1.0' }
@@ -97,7 +137,9 @@ export default function JourneyMap({
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
-          return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name };
+          const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name };
+          GEOCODE_CACHE.set(cacheKey, result);
+          return result;
         }
       }
     } catch (e) {}
