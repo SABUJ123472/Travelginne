@@ -44,7 +44,7 @@ export default function BudgetPlannerPage() {
               FISCAL OVERVIEW
             </span>
             <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
-              VOL. IV — AMALFI COAST
+              VOL. IV — NEWTOWN, KOLKATA
             </span>
           </div>
 
@@ -52,7 +52,7 @@ export default function BudgetPlannerPage() {
             Travel Ledger & Expenditures
           </h1>
           <p className="text-xs text-stone-600 leading-relaxed max-w-xl">
-            A meticulous accounting of anticipated costs and realized outlays for the upcoming Mediterranean excursion. All figures cataloged in USD.
+            A meticulous accounting of anticipated costs and realized outlays for the upcoming Kolkata excursion. All figures cataloged in INR (₹).
           </p>
         </div>
 

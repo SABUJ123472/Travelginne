@@ -27,7 +27,7 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f2eee5] border border-[#e2dad0] text-stone-700 text-xs font-bold">
             <Compass className="w-4 h-4 text-[#c85a44]" />
-            <span>Amalfi Coast, Italy</span>
+            <span>Newtown, Kolkata</span>
           </div>
 
           {/* Search bar */}
@@ -80,7 +80,7 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
                 onClick={() => setDropdown(!dropdown)}
                 className="w-8 h-8 rounded-full bg-[#c85a44] text-white font-bold flex items-center justify-center text-xs shadow-sm"
               >
-                {user.name?.[0]?.toUpperCase() || 'A'}
+                {user.name?.[0]?.toUpperCase() || 'S'}
               </button>
               {dropdown && (
                 <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-[#e2dad0] shadow-xl py-2 z-50">
@@ -90,15 +90,15 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
                   </div>
                   <button
                     onClick={() => { navigate('/profile'); setDropdown(false); }}
-                    className="w-full text-left px-4 py-2 text-xs text-stone-700 hover:bg-[#f5efe6] flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-xs text-stone-700 hover:bg-[#f5efe6] flex items-center gap-2"
                   >
-                    <User className="w-3.5 h-3.5" /> Profile
+                    <User className="w-3.5 h-3.5" /> Profile Settings
                   </button>
                   <button
                     onClick={() => { logout(); setDropdown(false); }}
-                    className="w-full text-left px-4 py-2 text-xs text-[#c85a44] hover:bg-[#fff0ed] flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
                   >
-                    <LogOut className="w-3.5 h-3.5" /> Log Out
+                    <LogOut className="w-3.5 h-3.5" /> Sign Out
                   </button>
                 </div>
               )}
@@ -106,19 +106,22 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
           ) : (
             <button
               onClick={onOpenAuth}
-              className="px-4 py-1.5 rounded-full bg-[#c85a44] text-white font-bold text-xs hover:bg-[#a54431] transition-colors shadow-sm"
+              className="px-4 py-1.5 rounded-full bg-[#19232d] text-white text-xs font-bold hover:bg-stone-800 transition-colors shadow-sm"
             >
               Sign In
             </button>
           )}
 
-          <button onClick={() => setMobile(!mobile)} className="xl:hidden p-2 text-stone-600 hover:text-stone-900">
-            {mobile ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <button
+            onClick={() => setMobile(!mobile)}
+            className="xl:hidden p-2 rounded-full bg-[#f2eee5] border border-[#e2dad0] text-stone-700"
+          >
+            {mobile ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Drawer */}
       {mobile && (
         <div className="xl:hidden bg-[#faf8f5] border-b border-[#e2dad0] px-4 py-3 space-y-1">
           {NAV.map(({ to, label }) => (
@@ -127,7 +130,7 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
               to={to}
               onClick={() => setMobile(false)}
               className={({ isActive }) =>
-                `block w-full text-left px-3 py-2 rounded-lg text-xs font-bold ${
+                `block px-4 py-2 rounded-xl text-xs font-bold ${
                   isActive ? 'bg-[#c85a44] text-white' : 'text-stone-700 hover:bg-[#f2eee5]'
                 }`
               }

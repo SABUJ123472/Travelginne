@@ -1,22 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('travelgenie_user');
-    return saved ? JSON.parse(saved) : {
+    const token = localStorage.getItem('travelgenie_token');
+    const storedUser = localStorage.getItem('travelgenie_user');
+    if (token && storedUser) {
+      try { return JSON.parse(storedUser); } catch (e) {}
+    }
+    return {
       id: 'demo_user_1',
-      name: 'Alex Rivera',
-      email: 'alex@travelgenie.com',
-      travelStyle: ['History', 'Culture', 'Food'],
+      name: 'Sabuj',
+      email: 'sabuj@expedition.org',
+      points: 450,
+      tier: 'Gold Explorer',
       preferredBudget: 'Moderate',
-      bio: 'Passionate traveler exploring the world with TravelGenie AI.'
+      travelStyle: ['History', 'Culture', 'Food'],
     };
   });
-  
-  const [token, setToken] = useState(() => localStorage.getItem('travelgenie_token') || 'demo_jwt_token_123');
+
   const [loading, setLoading] = useState(false);
 
   const login = async (email, password) => {
@@ -24,54 +28,56 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authService.login({ email, password });
       if (res.data.success) {
-        setUser(res.data.user);
-        setToken(res.data.token);
-        localStorage.setItem('travelgenie_user', JSON.stringify(res.data.user));
-        localStorage.setItem('travelgenie_token', res.data.token);
+        const { token, user: userData } = res.data;
+        localStorage.setItem('travelgenie_token', token);
+        localStorage.setItem('travelgenie_user', JSON.stringify(userData));
+        setUser(userData);
         return { success: true };
       }
     } catch (err) {
-      // Demo fallback
+      // Demo fallback login
       const demoUser = {
-        id: 'demo_user_1',
-        name: email.split('@')[0] || 'Alex Rivera',
+        id: 'user_' + Date.now(),
+        name: email.split('@')[0] || 'Sabuj',
         email,
-        travelStyle: ['History', 'Culture', 'Food'],
+        points: 100,
+        tier: 'Bronze Explorer',
         preferredBudget: 'Moderate',
-        bio: 'Passionate traveler exploring the world with TravelGenie AI.'
+        travelStyle: ['Culture', 'Food'],
       };
-      setUser(demoUser);
-      setToken('demo_token');
+      localStorage.setItem('travelgenie_token', 'demo_token_' + Date.now());
       localStorage.setItem('travelgenie_user', JSON.stringify(demoUser));
-      return { success: true, message: 'Logged in (Demo Mode)' };
+      setUser(demoUser);
+      return { success: true };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (userData) => {
+  const register = async (name, email, password) => {
     setLoading(true);
     try {
-      const res = await authService.register(userData);
+      const res = await authService.register({ name, email, password });
       if (res.data.success) {
-        setUser(res.data.user);
-        setToken(res.data.token);
-        localStorage.setItem('travelgenie_user', JSON.stringify(res.data.user));
-        localStorage.setItem('travelgenie_token', res.data.token);
+        const { token, user: userData } = res.data;
+        localStorage.setItem('travelgenie_token', token);
+        localStorage.setItem('travelgenie_user', JSON.stringify(userData));
+        setUser(userData);
         return { success: true };
       }
     } catch (err) {
-      // Demo fallback
-      const newUser = {
+      const demoUser = {
         id: 'user_' + Date.now(),
-        name: userData.name || 'Traveler',
-        email: userData.email,
-        travelStyle: userData.travelStyle || ['Culture'],
-        preferredBudget: userData.preferredBudget || 'Moderate',
-        bio: 'Passionate traveler.'
+        name: name || 'Sabuj',
+        email,
+        points: 50,
+        tier: 'Bronze Explorer',
+        preferredBudget: 'Moderate',
+        travelStyle: ['Culture'],
       };
-      setUser(newUser);
-      localStorage.setItem('travelgenie_user', JSON.stringify(newUser));
+      localStorage.setItem('travelgenie_token', 'demo_token_' + Date.now());
+      localStorage.setItem('travelgenie_user', JSON.stringify(demoUser));
+      setUser(demoUser);
       return { success: true };
     } finally {
       setLoading(false);
@@ -79,28 +85,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('travelgenie_user');
     localStorage.removeItem('travelgenie_token');
+    localStorage.removeItem('travelgenie_user');
+    setUser(null);
   };
 
-  const updatePreferences = async (newPrefs) => {
-    const updated = { ...user, ...newPrefs };
-    setUser(updated);
-    localStorage.setItem('travelgenie_user', JSON.stringify(updated));
+  const updatePreferences = async (data) => {
     try {
-      await authService.updatePreferences(newPrefs);
-    } catch (e) {
-      // Demo fallback ignore
-    }
+      const updated = { ...user, ...data };
+      setUser(updated);
+      localStorage.setItem('travelgenie_user', JSON.stringify(updated));
+      await authService.updatePreferences(data);
+    } catch (err) {}
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updatePreferences }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updatePreferences }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => useContext(AuthContext);

@@ -61,7 +61,7 @@ export default function DashboardPage() {
     } catch (err) {}
   };
 
-  const userName = user?.name || 'Alex Rivera';
+  const userName = user?.name || 'Sabuj';
 
   return (
     <div className="space-y-8 pb-16">
