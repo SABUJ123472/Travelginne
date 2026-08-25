@@ -146,7 +146,17 @@ const loginUser = async (req, res) => {
 
 // Called after Google OAuth success — issues JWT and redirects to frontend
 const googleAuthCallback = (req, res) => {
-  const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+  let frontendUrl = process.env.FRONTEND_URL;
+  if (!frontendUrl || frontendUrl.includes('localhost')) {
+    const host = req.get('host');
+    if (host && !host.includes('localhost')) {
+      frontendUrl = `https://${host}`;
+    } else if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+      frontendUrl = 'https://travelgenie-delta.vercel.app';
+    } else {
+      frontendUrl = frontendUrl || 'http://localhost:5173';
+    }
+  }
   try {
     const user = req.user;
     if (!user) {

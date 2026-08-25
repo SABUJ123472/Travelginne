@@ -6,6 +6,23 @@ const { getIsConnected } = require('./db');
 // In-memory Google users fallback (when DB not connected)
 const memoryGoogleUsers = [];
 
+// Helper to dynamically determine callback URL
+const getCallbackURL = () => {
+  if (process.env.GOOGLE_CALLBACK_URL && !process.env.GOOGLE_CALLBACK_URL.includes('localhost')) {
+    return process.env.GOOGLE_CALLBACK_URL;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/api/auth/google/callback`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}/api/auth/google/callback`;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://travelgenie-delta.vercel.app/api/auth/google/callback';
+  }
+  return process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback';
+};
+
 // Register Google Strategy if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
@@ -13,7 +30,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback',
+        callbackURL: getCallbackURL(),
+        proxy: true,
       },
     async (accessToken, refreshToken, profile, done) => {
       try {

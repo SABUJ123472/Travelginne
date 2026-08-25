@@ -24,6 +24,9 @@ const { googleAuthCallback } = require('./controllers/authController');
 
 const app = express();
 
+// Trust reverse proxy (Vercel, Render, Cloudflare) for HTTPS and hostname
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(helmet({
   contentSecurityPolicy: false,
