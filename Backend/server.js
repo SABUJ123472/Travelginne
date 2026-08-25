@@ -17,7 +17,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const path = require('path');
-const { connectDB } = require('./config/db');
+const { connectDB, getIsConnected } = require('./config/db');
 const passport = require('./config/passport');
 const apiRoutes = require('./routes/api');
 const { googleAuthCallback } = require('./controllers/authController');
@@ -71,6 +71,7 @@ app.use(passport.session());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 150,
+  validate: { trustProxy: false, xForwardedForHeader: false },
   message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes.' }
 });
 app.use('/api', limiter);
