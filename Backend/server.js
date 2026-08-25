@@ -84,18 +84,14 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Lazy DB connection middleware for Serverless (Vercel)
+// Lazy DB connection middleware for Serverless (Vercel) - Non-blocking
 let isDbConnecting = false;
-app.use(async (req, res, next) => {
+app.use((req, res, next) => {
   if (!getIsConnected() && process.env.MONGODB_URI && !isDbConnecting) {
     isDbConnecting = true;
-    try {
-      await connectDB();
-    } catch (e) {
-      console.warn('Lazy DB connection warning:', e.message);
-    } finally {
-      isDbConnecting = false;
-    }
+    connectDB()
+      .catch((e) => console.warn('Lazy DB connection note:', e.message))
+      .finally(() => { isDbConnecting = false; });
   }
   next();
 });
