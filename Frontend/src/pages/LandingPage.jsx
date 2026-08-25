@@ -30,7 +30,7 @@ export default function LandingPage() {
         <section className="relative pt-12 md:pt-20 pb-16 overflow-hidden">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-saffron-500/8 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-sindoor-600/8 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sindoor-600 via-saffron-400 via-mustard-400 via-saffron-400 to-sindoor-600 opacity-60" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sindoor-600 via-saffron-400 to-sindoor-600 opacity-60" />
 
           <div className="max-w-5xl mx-auto px-4 text-center relative z-10 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-bengal-800/80 border border-saffron-500/35 text-saffron-300 text-xs font-semibold">

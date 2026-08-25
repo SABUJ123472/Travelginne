@@ -239,9 +239,62 @@ const optimizeItineraryAI = async (itinerary) => {
 };
 
 const answerAIChat = async (userPrompt, history = []) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (apiKey && !apiKey.startsWith('AQ.')) {
+    try {
+      const systemInstruction = "You are TravelGenie AI, an intelligent, charming, and highly knowledgeable travel concierge and expedition guide. Provide concise, well-formatted, and helpful advice on tourist attractions, local culture, authentic cuisine, safety advisories, and budget tips.";
+      
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `${systemInstruction}\n\nUser Question: ${userPrompt}` }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        }
+      };
+
+      const res = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        payload,
+        { timeout: 8000 }
+      );
+
+      const candidateText = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (candidateText) {
+        return {
+          reply: candidateText.trim(),
+          suggestions: [
+            "What are the best local food spots?",
+            "What is the safest way to travel here?",
+            "Give me a 3-day budget plan"
+          ]
+        };
+      }
+    } catch (apiErr) {
+      console.warn("⚠️ Gemini API Call fallback:", apiErr.message);
+    }
+  }
+
+  // Graceful curated intelligence fallback
+  const p = userPrompt.toLowerCase();
+  let fallbackReply = `TravelGenie AI recommendations for "${userPrompt}": Start your journey at iconic heritage landmarks, sample authentic local delicacies, and leverage local public transit for an eco-friendly expedition!`;
+  
+  if (p.includes('food') || p.includes('eat') || p.includes('dish') || p.includes('restaurant')) {
+    fallbackReply = `For culinary exploration related to "${userPrompt}", seek out certified heritage eateries and bustling evening street markets. Don't miss regional specialties, artisan sweet shops, and traditional teas!`;
+  } else if (p.includes('budget') || p.includes('cost') || p.includes('cheap') || p.includes('money')) {
+    fallbackReply = `Budget optimization tip for "${userPrompt}": Use city metro & shared transit cards, visit open public monuments during off-peak hours, and dine where locals gather for 60% savings.`;
+  } else if (p.includes('safe') || p.includes('emergency') || p.includes('warning')) {
+    fallbackReply = `Safety advisory for "${userPrompt}": Keep digital copies of emergency contacts, utilize well-lit transit hubs, and access our in-app SOS terminal for instant local helpline assistance.`;
+  }
+
   return {
-    reply: `TravelGenie AI recommendations for "${userPrompt}": Visit key heritage landmarks, sample authentic local food, and use public transit!`,
-    suggestions: ['Top attractions nearby?', 'Local food recommendation', 'Safety advisories']
+    reply: fallbackReply,
+    suggestions: ['Top attractions nearby?', 'Local food recommendations', 'Public transport routes', 'Safety advisories']
   };
 };
 

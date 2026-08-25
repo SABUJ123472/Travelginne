@@ -1,12 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import L from 'leaflet';
 import { MapPin, Navigation, Compass, RefreshCw } from 'lucide-react';
+
+// Fix Leaflet default icon paths in bundled Vite environments
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 export default function MapView({ places = [], center = [22.5726, 88.3639], zoom = 13 }) {
   const [userPos, setUserPos] = useState(null);
   const [addressName, setAddressName] = useState('');
   const [loadingGps, setLoadingGps] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
-  // Browser Geolocation API + Nominatim Reverse Geocoding API
+  // Browser Geolocation API + Nominatim Reverse Geocoding
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -19,9 +30,10 @@ export default function MapView({ places = [], center = [22.5726, 88.3639], zoom
         const { latitude, longitude } = pos.coords;
         setUserPos({ lat: latitude, lng: longitude });
 
-        // Nominatim OpenStreetMap Reverse Geocoding
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
+            headers: { 'User-Agent': 'TravelGenieApp/1.0' }
+          });
           const data = await res.json();
           if (data && data.display_name) {
             setAddressName(data.display_name.split(',').slice(0, 3).join(','));
@@ -32,89 +44,103 @@ export default function MapView({ places = [], center = [22.5726, 88.3639], zoom
           setLoadingGps(false);
         }
       },
-      (err) => {
+      () => {
         setLoadingGps(false);
-      }
+      },
+      { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
   useEffect(() => {
-    // Leaflet + OpenStreetMap Map Rendering
-    if (typeof window !== 'undefined' && window.L) {
-      const container = document.getElementById('map-leaflet-container');
-      if (container) {
-        if (container._leaflet_id) {
-          container._leaflet_id = null;
-        }
+    if (!mapContainerRef.current) return;
 
-        const mapCenter = userPos ? [userPos.lat, userPos.lng] : center;
-        const map = window.L.map('map-leaflet-container').setView(mapCenter, zoom);
-
-        // OpenStreetMap Tile Layer
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // User position marker
-        if (userPos) {
-          window.L.circleMarker([userPos.lat, userPos.lng], {
-            radius: 8,
-            fillColor: "#0d9488",
-            color: "#ffffff",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9
-          }).addTo(map).bindPopup("<b>📍 Your Current Location</b>").openPopup();
-        }
-
-        // Places markers
-        places.forEach(p => {
-          if (p.coordinates?.lat && p.coordinates?.lng) {
-            window.L.marker([p.coordinates.lat, p.coordinates.lng])
-              .addTo(map)
-              .bindPopup(`<b>${p.name}</b><br/>${p.category || p.type || ''}`);
-          }
-        });
-      }
+    // Cleanup previous map instance if it exists
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
     }
-  }, [center, zoom, places, userPos]);
+
+    const mapCenter = userPos ? [userPos.lat, userPos.lng] : center;
+    const map = L.map(mapContainerRef.current).setView(mapCenter, zoom);
+    mapInstanceRef.current = map;
+
+    // OpenStreetMap Tile Layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Place Markers
+    if (places && places.length > 0) {
+      places.forEach((place) => {
+        if (place.lat && place.lng) {
+          const customMarker = L.divIcon({
+            className: 'custom-map-pin',
+            html: `<div style="background-color: #c85a44; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; border: 2px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">📍</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+          });
+
+          L.marker([place.lat, place.lng], { icon: customMarker })
+            .addTo(map)
+            .bindPopup(`
+              <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 2px;">
+                <strong style="color: #1c1917; font-size: 13px; display: block; margin-bottom: 2px;">${place.name || 'Location'}</strong>
+                <p style="color: #78716c; font-size: 11px; margin: 0;">${place.category || place.description || 'Heritage Landmark'}</p>
+              </div>
+            `);
+        }
+      });
+    }
+
+    // User Location Marker
+    if (userPos) {
+      const userMarker = L.divIcon({
+        className: 'user-map-pin',
+        html: `<div style="background-color: #2b5934; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 10px rgba(43,89,52,0.5);">👤</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+      });
+
+      L.marker([userPos.lat, userPos.lng], { icon: userMarker })
+        .addTo(map)
+        .bindPopup(`<strong>Your Current Position</strong><br/>${addressName || 'GPS Located'}`)
+        .openPopup();
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [places, userPos, center, zoom]);
 
   return (
-    <div className="w-full h-96 rounded-3xl glass-card border border-slate-800 overflow-hidden relative shadow-2xl">
-      
-      {/* Leaflet + OpenStreetMap Container */}
-      <div id="map-leaflet-container" className="w-full h-full bg-slate-900">
-        {/* Graphical fallback if Leaflet script is still loading */}
-        <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-teal-950/40 flex flex-col items-center justify-center p-6 text-center">
-          <Compass className="w-10 h-10 text-teal-400 mb-2 animate-pulse" />
-          <h4 className="text-sm font-bold text-white mb-1">Leaflet + OpenStreetMap Radar</h4>
-          <p className="text-xs text-slate-400 max-w-sm mb-3">Rendering OpenStreetMap tiles with GPS location coordinates.</p>
+    <div className="space-y-3">
+      {/* Map Control Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#f5efe6] border border-[#e2dad0] text-xs">
+        <div className="flex items-center gap-2 text-stone-700 font-semibold">
+          <Compass className="w-4 h-4 text-[#c85a44]" />
+          <span>{addressName ? `Current: ${addressName}` : 'Interactive Geospatial Map'}</span>
         </div>
-      </div>
 
-      {/* Top Left Geolocation Pill */}
-      <div className="absolute top-4 left-4 z-[400] flex items-center gap-2">
         <button
+          type="button"
           onClick={handleGetLocation}
           disabled={loadingGps}
-          className="px-3.5 py-2 rounded-xl bg-slate-950/90 border border-teal-500/40 text-teal-300 hover:bg-teal-500 hover:text-slate-950 font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 backdrop-blur-md"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#e8a048] to-[#c85a44] text-white font-bold hover:opacity-90 transition-opacity shadow-sm disabled:opacity-60"
         >
-          {loadingGps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5 text-teal-400" />}
-          <span>{loadingGps ? 'Locating...' : 'My Live GPS Location'}</span>
+          {loadingGps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+          <span>{loadingGps ? 'Locating...' : 'Locate Me (GPS)'}</span>
         </button>
-
-        {addressName && (
-          <span className="px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-[11px] text-slate-200 font-medium truncate max-w-xs shadow-md backdrop-blur-md">
-            📍 {addressName}
-          </span>
-        )}
       </div>
 
-      {/* Bottom Right Badge */}
-      <div className="absolute bottom-3 right-3 z-[400] px-3 py-1 rounded-full bg-slate-950/90 border border-slate-800 text-[10px] text-slate-400 font-mono flex items-center gap-1 shadow-md backdrop-blur-md">
-        <span>Leaflet v1.9 + OpenStreetMap + Nominatim</span>
-      </div>
+      {/* Leaflet Map Box */}
+      <div
+        ref={mapContainerRef}
+        className="w-full h-80 rounded-2xl border border-[#e2dad0] shadow-sm z-0 overflow-hidden relative"
+      />
     </div>
   );
 }

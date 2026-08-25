@@ -102,8 +102,26 @@ const MODE_META = {
   }),
 };
 
-// Geocode a location using LocationIQ API (with Nominatim fallback)
+// Geocode a location using Nominatim (primary, free) with LocationIQ as fallback
 const geocode = async (location) => {
+  // 1. Nominatim — free, no rate limit
+  try {
+    const res = await axios.get('https://nominatim.openstreetmap.org/search', {
+      params: { q: location, format: 'json', limit: 1 },
+      headers: { 'User-Agent': 'TravelGenieApp/1.0' },
+      timeout: 5000,
+    });
+    if (res.data?.length > 0) {
+      return {
+        lat: parseFloat(res.data[0].lat),
+        lon: parseFloat(res.data[0].lon),
+        displayName: res.data[0].display_name,
+        provider: 'OpenStreetMap Nominatim'
+      };
+    }
+  } catch (e) {}
+
+  // 2. LocationIQ Fallback (rate-limited — only if Nominatim fails)
   const locIQKey = process.env.LOCATIONIQ_API_KEY;
   if (locIQKey && locIQKey !== 'your_locationiq_key') {
     try {
@@ -121,23 +139,6 @@ const geocode = async (location) => {
       console.warn('LocationIQ Geocoding note:', e.message);
     }
   }
-
-  // OpenStreetMap Nominatim Fallback
-  try {
-    const res = await axios.get('https://nominatim.openstreetmap.org/search', {
-      params: { q: location, format: 'json', limit: 1 },
-      headers: { 'User-Agent': 'TravelGenieApp/1.0' },
-      timeout: 4000,
-    });
-    if (res.data?.length > 0) {
-      return {
-        lat: parseFloat(res.data[0].lat),
-        lon: parseFloat(res.data[0].lon),
-        displayName: res.data[0].display_name,
-        provider: 'OpenStreetMap Nominatim'
-      };
-    }
-  } catch (e) {}
 
   return null;
 };

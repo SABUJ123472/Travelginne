@@ -24,7 +24,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
     try {
       if (isSignUp) {
-        const res = await register(formData);
+        const res = await register(formData.name, formData.email, formData.password);
         if (res.success) onClose();
       } else {
         const res = await login(formData.email, formData.password);
@@ -81,12 +81,15 @@ export default function AuthModal({ isOpen, onClose }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Full Name</label>
+              <label htmlFor="auth-name" className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Full Name</label>
               <div className="relative">
                 <User className="w-4 h-4 text-saffron-600/50 absolute left-3 top-3" />
                 <input
+                  id="auth-name"
+                  name="name"
                   type="text"
                   required
+                  autoComplete="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Rahul Banerjee"
@@ -97,12 +100,15 @@ export default function AuthModal({ isOpen, onClose }) {
           )}
 
           <div>
-            <label className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Email Address</label>
+            <label htmlFor="auth-email" className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Email Address</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-saffron-600/50 absolute left-3 top-3" />
               <input
+                id="auth-email"
+                name="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="rahul@example.com"
@@ -112,12 +118,15 @@ export default function AuthModal({ isOpen, onClose }) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Password</label>
+            <label htmlFor="auth-password" className="block text-[11px] font-bold text-saffron-300/80 uppercase mb-1">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-saffron-600/50 absolute left-3 top-3" />
               <input
+                id="auth-password"
+                name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"

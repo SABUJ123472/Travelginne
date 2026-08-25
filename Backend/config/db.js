@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Use Google DNS to reliably resolve MongoDB Atlas SRV records
+// (Some ISP/local DNS servers block or fail on SRV lookups)
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 
 let isConnected = false;
 
 const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
-  
+
   if (!uri) {
     console.log('----------------------------------------------------');
     console.log('⚡ NOTICE: MONGODB_URI is not configured in .env');
@@ -16,7 +21,7 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
     });
     isConnected = true;
     console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);

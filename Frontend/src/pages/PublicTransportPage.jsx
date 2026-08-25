@@ -83,11 +83,14 @@ export default function PublicTransportPage() {
             
             {/* Origin */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Origin Address / Landmark</label>
+              <label htmlFor="transport-from" className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Origin Address / Landmark</label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                 <input
+                  id="transport-from"
+                  name="from"
                   type="text"
+                  autoComplete="off"
                   value={fromAddress}
                   onChange={(e) => setFromAddress(e.target.value)}
                   placeholder="Starting location (e.g. Howrah Station, Kolkata)..."
@@ -98,11 +101,14 @@ export default function PublicTransportPage() {
 
             {/* Destination */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Destination Address / Landmark</label>
+              <label htmlFor="transport-to" className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Destination Address / Landmark</label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                 <input
+                  id="transport-to"
+                  name="to"
                   type="text"
+                  autoComplete="off"
                   value={toAddress}
                   onChange={(e) => setToAddress(e.target.value)}
                   placeholder="Destination (e.g. Park Street, Kolkata)..."

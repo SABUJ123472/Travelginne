@@ -1,12 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Use VITE_API_URL in production, fallback to /api proxy in dev
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // 15 second timeout
 });
 
 // Attach token to request headers
@@ -17,6 +19,19 @@ api.interceptors.request.use((config) => {
   }
   return config;
 }, (error) => Promise.reject(error));
+
+// Handle 401 globally — redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('travelgenie_token');
+      localStorage.removeItem('travelgenie_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // API Services
 export const authService = {
@@ -96,6 +111,12 @@ export const transportService = {
 
 export const nearbyService = {
   getNearby: (params) => api.get('/nearby', { params }),
+};
+
+// Helper to get the Google OAuth URL (full browser redirect)
+export const getGoogleAuthUrl = () => {
+  const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  return `${base}/api/auth/google`;
 };
 
 export default api;

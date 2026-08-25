@@ -165,7 +165,7 @@ export default function ExplorePage() {
 
               {selectedDest.history && (
                 <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-[#1e3b23] space-y-1">
-                  <strong className="block font-bold flex items-center gap-1.5 text-[#142918]">
+                  <strong className="flex font-bold items-center gap-1.5 text-[#142918]">
                     <BookOpen className="w-4 h-4 text-[#2b5934]" /> Heritage Lore & Historical Fact
                   </strong>
                   <p className="italic text-[11px] leading-relaxed">{selectedDest.history}</p>

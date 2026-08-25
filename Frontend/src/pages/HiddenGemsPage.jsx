@@ -222,7 +222,7 @@ export default function HiddenGemsPage() {
                 {/* Archival Local Lore Quote Box matching Google Stitch */}
                 {gem.localStory && (
                   <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-xs text-[#1e3b23] space-y-1">
-                    <strong className="block font-bold flex items-center gap-1.5 text-[#142918]">
+                    <strong className="flex font-bold items-center gap-1.5 text-[#142918]">
                       <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Local Lore & Heritage
                     </strong>
                     <p className="italic text-[11px] leading-relaxed">{gem.localStory}</p>

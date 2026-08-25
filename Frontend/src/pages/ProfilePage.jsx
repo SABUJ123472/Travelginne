@@ -54,18 +54,24 @@ export default function ProfilePage() {
         <form onSubmit={handleSave} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Full Name</label>
+              <label htmlFor="profile-name" className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Full Name</label>
               <input
+                id="profile-name"
+                name="name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-[#f2eee5] border border-[#e2dad0] text-xs text-stone-900 focus:outline-none focus:border-[#d96b52]"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Email Address</label>
+              <label htmlFor="profile-email" className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Email Address</label>
               <input
+                id="profile-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-[#f2eee5] border border-[#e2dad0] text-xs text-stone-900 focus:outline-none focus:border-[#d96b52]"
@@ -74,8 +80,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Preferred Travel Budget Tier</label>
+            <label htmlFor="profile-budget" className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">Preferred Travel Budget Tier</label>
             <select
+              id="profile-budget"
+              name="preferredBudget"
               value={preferredBudget}
               onChange={(e) => setPreferredBudget(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl bg-[#f2eee5] border border-[#e2dad0] text-xs text-stone-900 focus:outline-none"

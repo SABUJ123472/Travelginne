@@ -13,11 +13,17 @@ const NAV = [
   { to: '/mytrips',   label: 'My Trips' },
 ];
 
-export default function Navbar({ onOpenAuth, onOpenSOS }) {
+export default function Navbar({ onOpenSOS }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dropdown, setDropdown] = useState(false);
   const [mobile, setMobile]     = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    setDropdown(false);
+    navigate('/login');
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-[#faf8f5] border-b border-[#e2dad0]">
@@ -78,9 +84,13 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
             <div className="relative">
               <button
                 onClick={() => setDropdown(!dropdown)}
-                className="w-8 h-8 rounded-full bg-[#c85a44] text-white font-bold flex items-center justify-center text-xs shadow-sm"
+                className="w-8 h-8 rounded-full bg-[#c85a44] text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden"
               >
-                {user.name?.[0]?.toUpperCase() || 'S'}
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user.name?.[0]?.toUpperCase() || 'U'
+                )}
               </button>
               {dropdown && (
                 <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-[#e2dad0] shadow-xl py-2 z-50">
@@ -95,7 +105,7 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
                     <User className="w-3.5 h-3.5" /> Profile Settings
                   </button>
                   <button
-                    onClick={() => { logout(); setDropdown(false); }}
+                    onClick={handleLogout}
                     className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
                   >
                     <LogOut className="w-3.5 h-3.5" /> Sign Out
@@ -105,7 +115,7 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
             </div>
           ) : (
             <button
-              onClick={onOpenAuth}
+              onClick={() => navigate('/login')}
               className="px-4 py-1.5 rounded-full bg-[#19232d] text-white text-xs font-bold hover:bg-stone-800 transition-colors shadow-sm"
             >
               Sign In
@@ -138,6 +148,14 @@ export default function Navbar({ onOpenAuth, onOpenSOS }) {
               {label}
             </NavLink>
           ))}
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Sign Out
+            </button>
+          )}
         </div>
       )}
     </header>

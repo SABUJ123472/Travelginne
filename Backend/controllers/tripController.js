@@ -7,6 +7,14 @@ const memoryTrips = [];
 
 const generateTrip = async (req, res) => {
   try {
+    const { destination } = req.body;
+    if (!destination || typeof destination !== 'string' || !destination.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Destination name is required (e.g. Kolkata, Paris, Tokyo).'
+      });
+    }
+
     const itinerary = await generateItineraryAI(req.body);
     return res.status(200).json({
       success: true,
@@ -74,8 +82,6 @@ const getMyTrips = async (req, res) => {
       trips = memoryTrips.filter(t => t.userId === userId || userId === 'demo_user_1');
     }
 
-    // Return empty list — no fake default trips
-
     return res.json({ success: true, count: trips.length, trips });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to fetch trips.' });
@@ -107,9 +113,18 @@ const getTripById = async (req, res) => {
 const deleteTrip = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user ? req.user.id : null;
     const isConnected = getIsConnected();
 
     if (isConnected) {
+      const trip = await Trip.findById(id);
+      if (!trip) {
+        return res.status(404).json({ success: false, message: 'Trip not found.' });
+      }
+      // Security ownership check
+      if (userId && trip.userId && trip.userId !== userId && trip.userId !== 'demo_user_1') {
+        return res.status(403).json({ success: false, message: 'Unauthorized to delete this expedition.' });
+      }
       await Trip.findByIdAndDelete(id);
     } else {
       const idx = memoryTrips.findIndex(t => t._id === id);
@@ -163,7 +178,23 @@ const duplicateTrip = async (req, res) => {
 
 const toggleVisitedStatus = async (req, res) => {
   try {
-    const { tripId, dayIndex, activityIndex } = req.body;
+    const { tripId, dayIndex = 0, activityIndex = 0 } = req.body;
+    const isConnected = getIsConnected();
+
+    if (isConnected && tripId) {
+      const trip = await Trip.findById(tripId);
+      if (trip && trip.days && trip.days[dayIndex]?.activities?.[activityIndex]) {
+        const current = !!trip.days[dayIndex].activities[activityIndex].visited;
+        trip.days[dayIndex].activities[activityIndex].visited = !current;
+        await trip.save();
+        return res.json({
+          success: true,
+          visited: !current,
+          message: `Activity marked as ${!current ? 'visited' : 'unvisited'}!`
+        });
+      }
+    }
+
     return res.json({
       success: true,
       message: 'Activity visited status updated!'

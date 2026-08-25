@@ -137,13 +137,16 @@ export default function AITripPlannerPage() {
             
             {/* Destination */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+              <label htmlFor="trip-destination" className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
                 Destination
               </label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                 <input
+                  id="trip-destination"
+                  name="destination"
                   type="text"
+                  autoComplete="off"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="e.g. Kolkata, Paris, Tokyo, Bali"
@@ -173,10 +176,12 @@ export default function AITripPlannerPage() {
             {/* Days & Budget */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
+                <label htmlFor="trip-days" className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block">
                   Duration: {days} Days
                 </label>
                 <input
+                  id="trip-days"
+                  name="days"
                   type="range"
                   min="1"
                   max="14"
@@ -354,7 +359,7 @@ export default function AITripPlannerPage() {
 
                     {/* Archival Lore Box matching Google Stitch */}
                     <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-xs text-[#1e3b23] space-y-1">
-                      <strong className="block font-bold flex items-center gap-1.5 text-[#142918]">
+                      <strong className="flex font-bold items-center gap-1.5 text-[#142918]">
                         <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Archival Lore
                       </strong>
                       <p className="italic text-[11px] leading-relaxed">
@@ -395,7 +400,7 @@ export default function AITripPlannerPage() {
                 </div>
 
                 <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-xs text-[#1e3b23] space-y-1">
-                  <strong className="block font-bold flex items-center gap-1 text-[#142918]">
+                  <strong className="flex font-bold items-center gap-1 text-[#142918]">
                     <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Archival Lore
                   </strong>
                   <p className="italic text-[11px] leading-relaxed">

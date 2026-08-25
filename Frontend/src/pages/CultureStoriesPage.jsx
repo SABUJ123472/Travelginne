@@ -137,7 +137,7 @@ export default function CultureStoriesPage() {
               {/* Cultural Traditions Box */}
               {story.tradition && (
                 <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-xs text-[#1e3b23] space-y-1">
-                  <strong className="block font-bold flex items-center gap-1.5 text-[#142918]">
+                  <strong className="flex font-bold items-center gap-1.5 text-[#142918]">
                     <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Local Traditions & Culinary Customs
                   </strong>
                   <p className="italic text-[11px] leading-relaxed">
@@ -149,7 +149,7 @@ export default function CultureStoriesPage() {
               {/* Cultural Etiquette Box */}
               {story.etiquette && (
                 <div className="p-3.5 rounded-xl bg-[#f5efe6] border border-[#e2dad0] text-xs text-stone-800 space-y-1">
-                  <strong className="block font-bold flex items-center gap-1.5 text-stone-900">
+                  <strong className="flex font-bold items-center gap-1.5 text-stone-900">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#c85a44]" /> Traveler Etiquette Guide
                   </strong>
                   <p className="text-[11px] leading-relaxed text-stone-600 font-medium">
@@ -202,7 +202,7 @@ export default function CultureStoriesPage() {
               
               {selectedStory.tradition && (
                 <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-[#1e3b23] space-y-1">
-                  <strong className="block font-bold flex items-center gap-1.5 text-[#142918]">
+                  <strong className="flex font-bold items-center gap-1.5 text-[#142918]">
                     <BookOpen className="w-4 h-4 text-[#2b5934]" /> Local Traditions & Cultural Customs
                   </strong>
                   <p className="italic text-[11px] leading-relaxed">
@@ -213,7 +213,7 @@ export default function CultureStoriesPage() {
 
               {selectedStory.etiquette && (
                 <div className="p-4 rounded-xl bg-[#f5efe6] border border-[#e2dad0] space-y-1">
-                  <strong className="block font-bold flex items-center gap-1.5 text-stone-900">
+                  <strong className="flex font-bold items-center gap-1.5 text-stone-900">
                     <ShieldCheck className="w-4 h-4 text-[#c85a44]" /> Traveler Etiquette & Local Respect
                   </strong>
                   <p className="text-stone-600 font-medium leading-relaxed">
