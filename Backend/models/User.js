@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
   travelerRank:         { type: String, default: 'Bronze Explorer' },
   badges:               [{ type: String }],
   checkIns:             [checkInSchema],
+  lastDailyClaim:       { type: Date, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

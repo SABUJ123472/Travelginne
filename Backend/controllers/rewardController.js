@@ -94,30 +94,73 @@ const checkInPlace = async (req, res) => {
   }
 };
 
-// 2. Claim Daily Bonus (+50 pts)
+// 2. Claim Daily Bonus (+50 pts) — 24-hour cooldown enforced
 const claimDailyBonus = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : 'demo_user_1';
+    const userId = req.user ? req.user.id : null;
     const isConnected = getIsConnected();
     const bonusPoints = 50;
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    const now = new Date();
 
     let totalPoints = 0;
     let travelerRank = 'Bronze Explorer';
+    let nextClaimAt = null;
 
-    if (isConnected && isValidObjectId(userId)) {
+    if (isConnected && userId && isValidObjectId(userId)) {
       const userObj = await User.findById(userId);
-      if (userObj) {
-        userObj.geniePoints = (userObj.geniePoints || 0) + bonusPoints;
-        userObj.travelerRank = calculateRank(userObj.geniePoints);
-        await userObj.save();
-        totalPoints = userObj.geniePoints;
-        travelerRank = userObj.travelerRank;
+      if (!userObj) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
       }
+
+      // Check 24hr cooldown
+      if (userObj.lastDailyClaim) {
+        const elapsed = now - new Date(userObj.lastDailyClaim);
+        if (elapsed < TWENTY_FOUR_HOURS) {
+          const msRemaining = TWENTY_FOUR_HOURS - elapsed;
+          nextClaimAt = new Date(now.getTime() + msRemaining).toISOString();
+          return res.status(429).json({
+            success: false,
+            alreadyClaimed: true,
+            message: 'Daily bonus already claimed. Come back in 24 hours.',
+            nextClaimAt,
+            msRemaining: Math.floor(msRemaining)
+          });
+        }
+      }
+
+      // Award bonus
+      userObj.geniePoints = (userObj.geniePoints || 0) + bonusPoints;
+      userObj.travelerRank = calculateRank(userObj.geniePoints);
+      userObj.lastDailyClaim = now;
+      await userObj.save();
+      totalPoints = userObj.geniePoints;
+      travelerRank = userObj.travelerRank;
+      nextClaimAt = new Date(now.getTime() + TWENTY_FOUR_HOURS).toISOString();
+
     } else {
+      // In-memory fallback with 24hr cooldown
+      if (memoryUser.lastDailyClaim) {
+        const elapsed = now - new Date(memoryUser.lastDailyClaim);
+        if (elapsed < TWENTY_FOUR_HOURS) {
+          const msRemaining = TWENTY_FOUR_HOURS - elapsed;
+          nextClaimAt = new Date(now.getTime() + msRemaining).toISOString();
+          return res.status(429).json({
+            success: false,
+            alreadyClaimed: true,
+            message: 'Daily bonus already claimed. Come back in 24 hours.',
+            nextClaimAt,
+            msRemaining: Math.floor(msRemaining)
+          });
+        }
+      }
+
       memoryUser.geniePoints += bonusPoints;
       memoryUser.travelerRank = calculateRank(memoryUser.geniePoints);
+      memoryUser.lastDailyClaim = now;
       totalPoints = memoryUser.geniePoints;
       travelerRank = memoryUser.travelerRank;
+      nextClaimAt = new Date(now.getTime() + TWENTY_FOUR_HOURS).toISOString();
     }
 
     return res.json({
@@ -125,12 +168,14 @@ const claimDailyBonus = async (req, res) => {
       message: 'Daily check-in bonus claimed! +50 GeniePoints earned.',
       pointsEarned: bonusPoints,
       totalPoints,
-      travelerRank
+      travelerRank,
+      nextClaimAt
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Daily bonus claim failed.' });
   }
 };
+
 
 // 3. Get Global Leaderboard
 const getLeaderboard = async (req, res) => {
