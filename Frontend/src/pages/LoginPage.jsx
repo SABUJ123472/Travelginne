@@ -33,8 +33,13 @@ export default function LoginPage() {
   // Handle Google OAuth error from URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('error') === 'google_failed') {
+    const err = params.get('error');
+    if (err === 'google_failed') {
       setGoogleError('Google sign-in failed. Please try again or use email.');
+    } else if (err === 'google_not_configured') {
+      setGoogleError('Google Sign-In is not configured yet in environment variables. Please use Email/Password.');
+    } else if (err === 'server_error') {
+      setGoogleError('An authentication error occurred. Please try email login.');
     }
   }, [location]);
 

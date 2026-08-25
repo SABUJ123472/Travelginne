@@ -115,8 +115,15 @@ export const nearbyService = {
 
 // Helper to get the Google OAuth URL (full browser redirect)
 export const getGoogleAuthUrl = () => {
-  const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-  return `${base}/api/auth/google`;
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
+  }
+  if (typeof window !== 'undefined' && window.location.origin) {
+    if (import.meta.env.PROD || (window.location.port !== '5173' && window.location.port !== '3000')) {
+      return `${window.location.origin}/api/auth/google`;
+    }
+  }
+  return 'http://localhost:5000/api/auth/google';
 };
 
 export default api;

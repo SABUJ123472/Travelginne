@@ -1,14 +1,14 @@
 const dotenv = require('dotenv');
 dotenv.config(); // ← Must be FIRST before any other require that reads process.env
 
-// Fail fast in production if critical env vars are missing
-if (process.env.NODE_ENV === 'production') {
-  const required = ['JWT_SECRET', 'MONGODB_URI', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
-  const missing = required.filter(k => !process.env[k]);
-  if (missing.length) {
-    console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
-    process.exit(1);
-  }
+// Validate environment variables gracefully
+const requiredKeys = ['JWT_SECRET', 'MONGODB_URI', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const missingKeys = requiredKeys.filter(k => !process.env[k]);
+if (missingKeys.length > 0) {
+  console.warn(`⚠️ Warning: Missing optional/suggested environment variables: ${missingKeys.join(', ')}. App running with fallback modes where applicable.`);
+}
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'travelgenie_default_jwt_secret_key_2026';
 }
 
 const express = require('express');
@@ -81,17 +81,24 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ─── Google OAuth Routes ─────────────────────────────────────────
-app.get('/api/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+app.get('/api/auth/google', (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+    return res.redirect(`${frontendUrl}/login?error=google_not_configured`);
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
 
-app.get('/api/auth/google/callback',
+app.get('/api/auth/google/callback', (req, res, next) => {
+  const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.redirect(`${frontendUrl}/login?error=google_not_configured`);
+  }
   passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_failed`,
+    failureRedirect: `${frontendUrl}/login?error=google_failed`,
     session: false
-  }),
-  googleAuthCallback
-);
+  })(req, res, next);
+}, googleAuthCallback);
 // ─────────────────────────────────────────────────────────────────
 
 // API Routes

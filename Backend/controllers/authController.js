@@ -146,21 +146,20 @@ const loginUser = async (req, res) => {
 
 // Called after Google OAuth success — issues JWT and redirects to frontend
 const googleAuthCallback = (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
   try {
     const user = req.user;
     if (!user) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_failed`);
+      return res.redirect(`${frontendUrl}/login?error=google_failed`);
     }
 
     const token = generateToken(user);
     const userData = encodeURIComponent(JSON.stringify(safeUser(user)));
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
     // Redirect to frontend with token in query param
     return res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${userData}`);
   } catch (error) {
     console.error('Google Callback Error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     return res.redirect(`${frontendUrl}/login?error=server_error`);
   }
 };
