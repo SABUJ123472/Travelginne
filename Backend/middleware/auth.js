@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'travelgenie_super_secret_jwt_key_2026');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'travelgenie_secret_production_key_2026');
     req.user = decoded;
     next();
   } catch (error) {
@@ -32,7 +32,7 @@ const requireAuth = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'travelgenie_super_secret_jwt_key_2026');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'travelgenie_secret_production_key_2026');
     req.user = decoded;
     next();
   } catch (error) {
