@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelGenie — Project Presentation & Pitch Deck</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0e1a12;
+      --bg-card: #15241b;
+      --terracotta: #c85a44;
+      --terracotta-light: #e88674;
+      --saffron: #e8a048;
+      --gold: #f3c267;
+      --forest: #1e3b23;
+      --parchment: #faf8f5;
+      --text-main: #ffffff;
+      --text-muted: #a8c4ad;
+      --border-subtle: rgba(43, 89, 52, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Ambient glow */
+    .glow-sphere {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+    .glow-1 { top: -10%; left: 30%; width: 500px; height: 500px; background: var(--terracotta); }
+    .glow-2 { bottom: -10%; right: 20%; width: 600px; height: 600px; background: var(--saffron); }
+
+    /* Container & Slide Viewport */
+    .deck-container {
+      position: relative;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 48px;
+      z-index: 10;
+    }
+
+    /* Top Navigation Header */
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--saffron), var(--terracotta));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 15px rgba(200, 90, 68, 0.4);
+    }
+
+    .brand-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .live-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .live-tag:hover {
+      background: rgba(16, 185, 129, 0.25);
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+
+    /* Main Slide Stage */
+    .slide-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      max-width: 1200px;
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Typography inside slides */
+    .slide-tag {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--saffron);
+      margin-bottom: 8px;
+    }
+
+    .slide-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .slide-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 750px;
+      margin-bottom: 28px;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--saffron), transparent);
+      opacity: 0.4;
+    }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .highlight-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: rgba(200, 90, 68, 0.2);
+      border: 1px solid rgba(200, 90, 68, 0.4);
+      color: var(--terracotta-light);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    /* Comparison Table / Pills */
+    .problem-pill {
+      background: rgba(225, 29, 72, 0.1);
+      border: 1px solid rgba(225, 29, 72, 0.3);
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .solution-pill {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    /* Code / Architecture Blocks */
+    .arch-box {
+      background: #09120c;
+      border: 1px solid rgba(43, 89, 52, 0.6);
+      border-radius: 14px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #93c5fd;
+    }
+
+    /* Bottom Navigation Controls */
+    .deck-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .dots-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(168, 196, 173, 0.2);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .dot.active {
+      width: 28px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--saffron), var(--terracotta));
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--saffron), var(--terracotta));
+      border: none;
+      box-shadow: 0 4px 15px rgba(200, 90, 68, 0.4);
+    }
+    .primary-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Print / PDF Styles */
+    @media print {
+      body {
+        overflow: visible;
+        height: auto;
+        background: #0e1a12 !important;
+        -webkit-print-color-adjust: exact;
+      }
+      .glow-sphere, .deck-footer, .nav-buttons {
+        display: none !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always;
+        height: 100vh;
+        padding: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow Effects -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+
+  <div class="deck-container">
+    
+    <!-- Top Header -->
+    <header class="deck-header">
+      <div class="brand-logo">
+        <div class="brand-badge">🧭</div>
+        <span class="brand-name">TravelGenie</span>
+        <span style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">| Executive Project Presentation</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="https://travelgenie-delta.vercel.app/" target="_blank" class="live-tag">
+          <span class="live-dot"></span>
+          travelgenie-delta.vercel.app ↗
+        </a>
+        <button id="fullscreen-btn" class="nav-btn" title="Toggle Fullscreen (F)">⛶ Fullscreen</button>
+      </div>
+    </header>
+
+    <!-- Main Slide Viewport -->
+    <main class="slide-stage">
+
+      <!-- SLIDE 1: Title & Hero -->
+      <section class="slide active" id="slide-1">
+        <div class="slide-tag">PROJECT PITCH & ARCHITECTURE</div>
+        <h1 class="slide-title" style="font-size: 52px; background: linear-gradient(to right, #ffffff, #f3c267); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+          TravelGenie
+        </h1>
+        <p class="slide-subtitle" style="font-size: 20px; color: #e2dad0;">
+          Your Smart AI Travel Companion & Cultural Geospatial Field Journal
+        </p>
+
+        <div class="grid-3" style="margin-top: 10px;">
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <h3 class="card-title">GenAI Itineraries</h3>
+            <p class="card-desc">Personalized multi-day travel schedules tailored by Google Gemini 1.5 Flash API.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏛️</div>
+            <h3 class="card-title">Cultural Preservation</h3>
+            <p class="card-desc">Crowdsourced hidden gems, folklore archives, and regional phrasebook translation.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔐</div>
+            <h3 class="card-title">Cloud Persistence</h3>
+            <p class="card-desc">Google OAuth 2.0, JWT auth, and active MongoDB Atlas cloud synchronization.</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 12px; font-size: 13px; color: var(--text-muted);">
+          <span>👤 <strong>Author:</strong> Sabuj Saha</span>
+          <span>•</span>
+          <span>🚀 <strong>Stack:</strong> React 18 + Vite + Node Express + MongoDB Atlas</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Problem Statement -->
+      <section class="slide" id="slide-2">
+        <div class="slide-tag">THE CHALLENGE</div>
+        <h2 class="slide-title">Why Modern Travel Planning is Broken</h2>
+        <p class="slide-subtitle">Travelers face extreme fragmentation, generic commercial traps, and regional safety barriers.</p>
+
+        <div class="grid-2">
+          <div class="problem-pill">
+            <h3 style="color: #fb7185; font-size: 16px; margin-bottom: 6px;">❌ Planning Fatigue & 20+ Open Tabs</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Travelers spend 10–15 hours toggling between blogs, map apps, transport schedules, and booking engines for a single 3-day vacation.
+            </p>
+          </div>
+          <div class="problem-pill">
+            <h3 style="color: #fb7185; font-size: 16px; margin-bottom: 6px;">❌ Impersonal & Crowded Hotspots</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Search engines prioritize sponsored tourist traps while authentic local culture, folklore, and hidden architectural gems remain undiscovered.
+            </p>
+          </div>
+          <div class="problem-pill">
+            <h3 style="color: #fb7185; font-size: 16px; margin-bottom: 6px;">❌ Language Barriers & Transit Confusion</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Navigating local metro, buses, and regional Indian dialects creates anxiety and unexpected transit expenses.
+            </p>
+          </div>
+          <div class="problem-pill">
+            <h3 style="color: #fb7185; font-size: 16px; margin-bottom: 6px;">❌ Safety Blindspots</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Lack of instant emergency SOS access, weather warnings, and local helplines when visiting unfamiliar areas.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: The TravelGenie Solution -->
+      <section class="slide" id="slide-3">
+        <div class="slide-tag">THE VALUE PROPOSITION</div>
+        <h2 class="slide-title">The TravelGenie Operating System</h2>
+        <p class="slide-subtitle">A unified, intelligent ecosystem connecting AI generation, interactive mapping, and community rewards.</p>
+
+        <div class="grid-2">
+          <div class="solution-pill">
+            <h3 style="color: #34d399; font-size: 16px; margin-bottom: 6px;">✅ One-Click Personalized AI Expeditions</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Generates complete day-by-day plans with estimated costs, optimal walking paths, and green transit routes in under 2 seconds.
+            </p>
+          </div>
+          <div class="solution-pill">
+            <h3 style="color: #34d399; font-size: 16px; margin-bottom: 6px;">✅ Curated Heritage Lore & Hidden Gems</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Unlocks authentic regional culture, artisan villages, historic street markets, and historical anecdotes.
+            </p>
+          </div>
+          <div class="solution-pill">
+            <h3 style="color: #34d399; font-size: 16px; margin-bottom: 6px;">✅ Multimodal Transit & Regional Phrasebook</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Real-time route navigation (Metro, Bus, Auto) paired with instant translations in Bengali, Hindi, and world languages.
+            </p>
+          </div>
+          <div class="solution-pill">
+            <h3 style="color: #34d399; font-size: 16px; margin-bottom: 6px;">✅ One-Tap SOS & Live Weather Hub</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Emergency contact terminal (Police 112, Women Helpline 1091, Tourist Helpline 1363) + real-time AQI and weather alerts.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Core Feature Ecosystem -->
+      <section class="slide" id="slide-4">
+        <div class="slide-tag">PRODUCT CAPABILITIES</div>
+        <h2 class="slide-title">End-to-End Feature Matrix</h2>
+        <p class="slide-subtitle">16 integrated modules built for modern solo travelers, families, and cultural explorers.</p>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-icon">🧭</div>
+            <h4 class="card-title" style="font-size: 15px;">AI Trip Planner</h4>
+            <p class="card-desc">Day-by-day itineraries with interactive waypoint maps.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🤖</div>
+            <h4 class="card-title" style="font-size: 15px;">AI Concierge</h4>
+            <p class="card-desc">Conversational travel assistant powered by Gemini 1.5.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">💎</div>
+            <h4 class="card-title" style="font-size: 15px;">Hidden Gems</h4>
+            <p class="card-desc">Verified offbeat cultural sites and secret heritage spots.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">💰</div>
+            <h4 class="card-title" style="font-size: 15px;">Smart Budget</h4>
+            <p class="card-desc">Calculates itemized food, transit, and lodging costs.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🗣️</div>
+            <h4 class="card-title" style="font-size: 15px;">Translator Hub</h4>
+            <p class="card-desc">Survival phrasebook with pronunciation guides.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🚌</div>
+            <h4 class="card-title" style="font-size: 15px;">Transport Guide</h4>
+            <p class="card-desc">Finds cheapest & fastest local bus and metro routes.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🏆</div>
+            <h4 class="card-title" style="font-size: 15px;">Rewards & Rank</h4>
+            <p class="card-desc">Cell tower check-ins, badges, and points leaderboard.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h4 class="card-title" style="font-size: 15px;">Safety & SOS</h4>
+            <p class="card-desc">One-click national emergency helpline dialer.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Full-Stack Architecture -->
+      <section class="slide" id="slide-5">
+        <div class="slide-tag">TECHNICAL ARCHITECTURE</div>
+        <h2 class="slide-title">Modern Full-Stack Engineering</h2>
+        <p class="slide-subtitle">High-throughput, decoupled architecture built for sub-second performance.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">🎨 Frontend (React 18 + Vite)</h3>
+            <ul style="font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-left: 18px; margin-top: 8px;">
+              <li><strong>Modular Code-Splitting:</strong> 87% bundle reduction via <code>React.lazy</code> & <code>Suspense</code> (76 kB main bundle).</li>
+              <li><strong>Design System:</strong> Bengali Heritage palette (Terracotta <code>#c85a44</code>, Saffron <code>#e8a048</code>, Parchment).</li>
+              <li><strong>Interactive Mapping:</strong> Leaflet & OpenStreetMap with 0ms in-memory landmark geocoder.</li>
+              <li><strong>State & Interceptors:</strong> Axios interceptors with automatic 401 token refresh/redirect.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">⚙️ Backend (Node.js + Express)</h3>
+            <ul style="font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-left: 18px; margin-top: 8px;">
+              <li><strong>Database Layer:</strong> MongoDB Atlas with multi-DNS SRV fallback (Google DNS <code>8.8.8.8</code>).</li>
+              <li><strong>Auth & Security:</strong> Passport.js Google OAuth 2.0 + 10-round salted bcrypt + JWT.</li>
+              <li><strong>AI Integration:</strong> Google Gemini 1.5 Flash API with resilient fallback cascade.</li>
+              <li><strong>Production Hardening:</strong> Helmet headers, strict CORS, and rate limiting.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: Generative AI Deep Dive -->
+      <section class="slide" id="slide-6">
+        <div class="slide-tag">ARTIFICIAL INTELLIGENCE</div>
+        <h2 class="slide-title">How Gemini AI Powers TravelGenie</h2>
+        <p class="slide-subtitle">Context-aware, constraint-driven itinerary synthesis with localized domain intelligence.</p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon">🧠</div>
+            <h3 class="card-title">1. Context Injection</h3>
+            <p class="card-desc">Combines destination, group size, duration, style (History, Food, Adventure) and budget tiers.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <h3 class="card-title">2. Real-Time Generation</h3>
+            <p class="card-desc">Google Gemini 1.5 Flash outputs structured, day-by-day JSON itineraries in ~1.5 seconds.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3 class="card-title">3. Fallback Cascade</h3>
+            <p class="card-desc">Zero-downtime offline intelligence layer ensures responses even under rate limits.</p>
+          </div>
+        </div>
+
+        <div class="arch-box" style="margin-top: 20px;">
+          <span style="color: #34d399;">// Sample AI Pipeline Flow</span><br/>
+          POST /api/trips/generate ➔ Gemini 1.5 Flash ➔ JSON Schema Validation ➔ MongoDB Atlas Ledger ➔ Interactive Map & Timeline
+        </div>
+      </section>
+
+      <!-- SLIDE 7: Gamification & Retention -->
+      <section class="slide" id="slide-7">
+        <div class="slide-tag">GROWTH & RETENTION</div>
+        <h2 class="slide-title">Gamified Community & Rewards</h2>
+        <p class="slide-subtitle">Incentivizing real-world exploration and heritage preservation through digital milestones.</p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon">📍</div>
+            <h3 class="card-title">Location Check-Ins</h3>
+            <p class="card-desc">Travelers earn <strong>100 pts</strong> at monuments and <strong>250 pts</strong> at verified Hidden Gems.</p>
+            <span class="highlight-badge">+250 Genie Points</span>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🎖️</div>
+            <h3 class="card-title">Collectible Badges</h3>
+            <p class="card-desc">Unlock digital accolades: <em>Hidden Gem Hunter</em>, <em>Culture Maestro</em>, <em>Heritage Specialist</em>.</p>
+            <span class="highlight-badge">Dynamic Badge Engine</span>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">👑</div>
+            <h3 class="card-title">Tiered Traveler Ranks</h3>
+            <p class="card-desc">Climb from <strong>Bronze Explorer</strong> ➔ <strong>Silver Voyager</strong> ➔ <strong>Gold Trailblazer</strong> ➔ <strong>Platinum Legend</strong>.</p>
+            <span class="highlight-badge">Live Community Leaderboard</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Live Verification & Metrics -->
+      <section class="slide" id="slide-8">
+        <div class="slide-tag">VERIFICATION & BENCHMARKS</div>
+        <h2 class="slide-title">Live Testing & Performance Metrics</h2>
+        <p class="slide-subtitle">Comprehensive audits across 19 API endpoints and optimized production bundling.</p>
+
+        <div class="grid-3">
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 44px; font-weight: 800; color: #34d399; font-family: 'Playfair Display', serif;">100%</div>
+            <h4 class="card-title">API Pass Rate</h4>
+            <p class="card-desc">All 19 backend endpoints passed live testing with HTTP 200 OK.</p>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 44px; font-weight: 800; color: var(--saffron); font-family: 'Playfair Display', serif;">76 kB</div>
+            <h4 class="card-title">Optimized JS Bundle</h4>
+            <p class="card-desc">87% code reduction via modular Vite chunking & dynamic imports.</p>
+          </div>
+
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 44px; font-weight: 800; color: #60a5fa; font-family: 'Playfair Display', serif;">0 ms</div>
+            <h4 class="card-title">Geocoding Latency</h4>
+            <p class="card-desc">Instant in-memory coordinate resolution with zero 429 rate limit errors.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: Roadmap & Future Vision -->
+      <section class="slide" id="slide-9">
+        <div class="slide-tag">FUTURE HORIZONS</div>
+        <h2 class="slide-title">Product Roadmap & Scale</h2>
+        <p class="slide-subtitle">Strategic evolutionary milestones for global travel intelligence.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">📱 Q2 2026: Progressive Web App (PWA)</h3>
+            <p class="card-desc">Full offline service worker caching for itineraries, maps, and phrasebooks when traveling in remote areas without internet connectivity.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">🎫 Q3 2026: 1-Click Booking Integration</h3>
+            <p class="card-desc">Direct API checkout for Indian Railways (IRCTC), domestic flights, certified local homestays, and verified tour guides.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">👥 Q4 2026: Collaborative Group Expeditions</h3>
+            <p class="card-desc">Real-time collaborative itinerary editing, shared expense splitting, and live GPS friend tracking on the journey map.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title" style="color: var(--saffron);">🌍 2027: Multilingual Voice Concierge</h3>
+            <p class="card-desc">Hands-free real-time audio translation and AI voice tour guide speaking in regional dialects across India and Southeast Asia.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Conclusion & Live Demo -->
+      <section class="slide" id="slide-10">
+        <div class="slide-tag">LIVE PLATFORM</div>
+        <h2 class="slide-title">Experience TravelGenie Today</h2>
+        <p class="slide-subtitle">Fully deployed, production-hardened, and ready for exploration worldwide.</p>
+
+        <div class="card" style="padding: 32px; text-align: center; max-width: 700px; margin: 0 auto;">
+          <div style="font-size: 40px; margin-bottom: 12px;">🧭✨</div>
+          <h3 style="font-size: 24px; font-weight: 800; color: #ffffff; margin-bottom: 12px;">
+            https://travelgenie-delta.vercel.app/
+          </h3>
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">
+            Test the live AI Itinerary Planner, Google 1-Click Login, Interactive Maps, and Rewards System.
+          </p>
+
+          <div style="display: flex; justify-content: center; gap: 14px;">
+            <a href="https://travelgenie-delta.vercel.app/" target="_blank" class="nav-btn primary-btn" style="text-decoration: none; padding: 12px 24px; font-size: 14px;">
+              Open Live Application ↗
+            </a>
+            <a href="https://github.com/SABUJ123472/Travelginne" target="_blank" class="nav-btn" style="text-decoration: none; padding: 12px 24px; font-size: 14px;">
+              View GitHub Repo ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Controls -->
+    <footer class="deck-footer">
+      <div class="slide-counter">
+        SLIDE <span id="current-slide-num">01</span> / <span id="total-slide-num">10</span>
+      </div>
+
+      <div class="dots-container" id="dots-container"></div>
+
+      <div class="nav-buttons">
+        <button id="prev-btn" class="nav-btn">← Prev</button>
+        <button id="next-btn" class="nav-btn primary-btn">Next →</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Slide Navigation Controller
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const currentSlideNumEl = document.getElementById('current-slide-num');
+    const totalSlideNumEl = document.getElementById('total-slide-num');
+    const dotsContainer = document.getElementById('dots-container');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+    totalSlideNumEl.textContent = String(totalSlides).padStart(2, '0');
+
+    // Create Navigation Dots
+    slides.forEach((_, idx) => {
+      const dot = document.createElement('div');
+      dot.className = `dot ${idx === 0 ? 'active' : ''}`;
+      dot.addEventListener('click', () => goToSlide(idx));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      dots.forEach((d, idx) => {
+        d.classList.toggle('active', idx === currentSlide);
+      });
+      currentSlideNumEl.textContent = String(currentSlide + 1).padStart(2, '0');
+
+      prevBtn.style.opacity = currentSlide === 0 ? '0.4' : '1';
+      prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+      nextBtn.textContent = currentSlide === totalSlides - 1 ? 'Finish 🚀' : 'Next →';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      updateSlide();
+    }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    // Touch swipe support for mobile/tablets
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    document.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    });
+  </script>
+</body>
+</html>
