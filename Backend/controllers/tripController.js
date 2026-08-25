@@ -46,14 +46,52 @@ const optimizeTrip = async (req, res) => {
 
 const saveTrip = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : 'demo_user_1';
-    const tripData = { ...req.body, userId, createdAt: new Date() };
+    const userId = req.user ? (req.user.id || req.user._id) : 'demo_user_1';
+    const body = req.body || {};
+    const itinerary = body.itinerary || body;
+
+    const daysArray = Array.isArray(itinerary.days)
+      ? itinerary.days
+      : (Array.isArray(body.days) ? body.days : []);
+
+    const totalBudget = Number(body.budget || body.customBudget || itinerary.customBudget || itinerary.estimatedCost) || 20000;
+
+    const tripData = {
+      userId,
+      destination: body.destination || itinerary.destination || 'Kolkata',
+      startDate: body.startDate || itinerary.startDate || '',
+      endDate: body.endDate || itinerary.endDate || '',
+      travelers: Number(body.travelers || itinerary.travelers) || 2,
+      budgetType: body.budgetCategory || body.budgetType || itinerary.budgetType || 'Moderate',
+      customBudget: totalBudget,
+      travelStyles: itinerary.travelStyles || body.travelStyles || body.interests || ['Cultural', 'Heritage'],
+      days: daysArray,
+      budgetBreakdown: itinerary.budgetBreakdown || {
+        accommodation: Math.round(totalBudget * 0.35),
+        food: Math.round(totalBudget * 0.25),
+        transport: Math.round(totalBudget * 0.15),
+        activities: Math.round(totalBudget * 0.15),
+        shopping: Math.round(totalBudget * 0.06),
+        emergency: Math.round(totalBudget * 0.04),
+        total: totalBudget,
+      },
+      sustainabilityScore: itinerary.sustainabilityScore || 88,
+      localScore: itinerary.localScore || 92,
+      explanation: itinerary.explanation || `Custom planned trip to ${body.destination || 'destination'}.`,
+      createdAt: new Date()
+    };
 
     const isConnected = getIsConnected();
     let saved;
 
     if (isConnected) {
-      saved = await Trip.create(tripData);
+      try {
+        saved = await Trip.create(tripData);
+      } catch (dbErr) {
+        console.warn('MongoDB saveTrip warning, falling back to memory store:', dbErr.message);
+        saved = { _id: 'trip_' + Date.now(), ...tripData };
+        memoryTrips.push(saved);
+      }
     } else {
       saved = { _id: 'trip_' + Date.now(), ...tripData };
       memoryTrips.push(saved);
@@ -66,25 +104,30 @@ const saveTrip = async (req, res) => {
     });
   } catch (error) {
     console.error('Save Trip Error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to save trip.' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to save trip.' });
   }
 };
 
 const getMyTrips = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : 'demo_user_1';
+    const userId = req.user ? (req.user.id || req.user._id) : 'demo_user_1';
     const isConnected = getIsConnected();
 
     let trips = [];
     if (isConnected) {
-      trips = await Trip.find({ userId }).sort({ createdAt: -1 });
+      try {
+        trips = await Trip.find({ userId }).sort({ createdAt: -1 });
+      } catch (dbErr) {
+        console.warn('MongoDB getMyTrips warning, using memory fallback:', dbErr.message);
+        trips = memoryTrips.filter(t => t.userId === userId || userId === 'demo_user_1' || t.userId === 'guest_user_demo');
+      }
     } else {
-      trips = memoryTrips.filter(t => t.userId === userId || userId === 'demo_user_1');
+      trips = memoryTrips.filter(t => t.userId === userId || userId === 'demo_user_1' || t.userId === 'guest_user_demo');
     }
 
     return res.json({ success: true, count: trips.length, trips });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to fetch trips.' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to fetch trips.' });
   }
 };
 
@@ -95,7 +138,11 @@ const getTripById = async (req, res) => {
 
     let trip;
     if (isConnected) {
-      trip = await Trip.findById(id);
+      try {
+        trip = await Trip.findById(id);
+      } catch (dbErr) {
+        trip = memoryTrips.find(t => t._id === id);
+      }
     } else {
       trip = memoryTrips.find(t => t._id === id);
     }
@@ -106,26 +153,31 @@ const getTripById = async (req, res) => {
 
     return res.json({ success: true, trip });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to fetch trip details.' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to fetch trip details.' });
   }
 };
 
 const deleteTrip = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user ? req.user.id : null;
+    const userId = req.user ? (req.user.id || req.user._id) : null;
     const isConnected = getIsConnected();
 
     if (isConnected) {
-      const trip = await Trip.findById(id);
-      if (!trip) {
-        return res.status(404).json({ success: false, message: 'Trip not found.' });
+      try {
+        const trip = await Trip.findById(id);
+        if (!trip) {
+          return res.status(404).json({ success: false, message: 'Trip not found.' });
+        }
+        // Security ownership check
+        if (userId && trip.userId && trip.userId !== userId && trip.userId !== 'demo_user_1') {
+          return res.status(403).json({ success: false, message: 'Unauthorized to delete this expedition.' });
+        }
+        await Trip.findByIdAndDelete(id);
+      } catch (dbErr) {
+        const idx = memoryTrips.findIndex(t => t._id === id);
+        if (idx !== -1) memoryTrips.splice(idx, 1);
       }
-      // Security ownership check
-      if (userId && trip.userId && trip.userId !== userId && trip.userId !== 'demo_user_1') {
-        return res.status(403).json({ success: false, message: 'Unauthorized to delete this expedition.' });
-      }
-      await Trip.findByIdAndDelete(id);
     } else {
       const idx = memoryTrips.findIndex(t => t._id === id);
       if (idx !== -1) memoryTrips.splice(idx, 1);
@@ -133,7 +185,7 @@ const deleteTrip = async (req, res) => {
 
     return res.json({ success: true, message: 'Trip deleted successfully.' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to delete trip.' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to delete trip.' });
   }
 };
 
@@ -144,7 +196,11 @@ const duplicateTrip = async (req, res) => {
     let original;
 
     if (isConnected) {
-      original = await Trip.findById(id);
+      try {
+        original = await Trip.findById(id);
+      } catch (dbErr) {
+        original = memoryTrips.find(t => t._id === id);
+      }
     } else {
       original = memoryTrips.find(t => t._id === id);
     }
@@ -153,14 +209,19 @@ const duplicateTrip = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Original trip not found.' });
     }
 
-    const plainOriginal = original.toObject ? original.toObject() : original;
+    const plainOriginal = original.toObject ? original.toObject() : { ...original };
     delete plainOriginal._id;
     plainOriginal.destination = `${plainOriginal.destination} (Copy)`;
     plainOriginal.createdAt = new Date();
 
     let duplicated;
     if (isConnected) {
-      duplicated = await Trip.create(plainOriginal);
+      try {
+        duplicated = await Trip.create(plainOriginal);
+      } catch (dbErr) {
+        duplicated = { _id: 'trip_' + Date.now(), ...plainOriginal };
+        memoryTrips.push(duplicated);
+      }
     } else {
       duplicated = { _id: 'trip_' + Date.now(), ...plainOriginal };
       memoryTrips.push(duplicated);
@@ -172,7 +233,7 @@ const duplicateTrip = async (req, res) => {
       trip: duplicated
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to duplicate trip.' });
+    return res.status(500).json({ success: false, message: error.message || 'Failed to duplicate trip.' });
   }
 };
 
