@@ -53,19 +53,28 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(express.json({ limit: '1mb' }));
-
-// Session (for Passport OAuth flow only — JWT is used for actual auth)
-app.use(session({
-  secret: process.env.JWT_SECRET || 'travelgenie_session_secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 5 * 60 * 1000 }
-}));
+// Smart Body Parsing (Vercel Serverless pre-parses req.body)
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    return next();
+  }
+  express.json({ limit: '5mb' })(req, res, (err) => {
+    if (err) {
+      console.warn('JSON parsing note, falling back to empty body:', err.message);
+      req.body = {};
+    }
+    next();
+  });
+});
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    return next();
+  }
+  express.urlencoded({ extended: true, limit: '5mb' })(req, res, () => next());
+});
 
 // Passport initialization
 app.use(passport.initialize());
-app.use(passport.session());
 
 // Rate Limiting
 const limiter = rateLimit({
