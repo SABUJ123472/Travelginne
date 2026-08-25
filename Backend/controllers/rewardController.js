@@ -26,16 +26,12 @@ const getNextRankThreshold = (points) => {
 
 const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
 
-// Memory fallback user state for demo mode
+// Memory fallback user state for demo mode (starts fresh at 0)
 let memoryUser = {
-  geniePoints: 850,
-  travelerRank: 'Gold Trailblazer',
-  badges: ['Culture Maestro', 'Heritage Explorer', 'Hidden Gem Hunter'],
-  checkIns: [
-    { placeName: 'Victoria Memorial', city: 'Kolkata', pointsEarned: 100, isHiddenGem: false, checkInTime: new Date(Date.now() - 86400000 * 3) },
-    { placeName: 'Kumartuli Artisan Village', city: 'Kolkata', pointsEarned: 250, isHiddenGem: true, checkInTime: new Date(Date.now() - 86400000 * 2) },
-    { placeName: 'Eiffel Tower', city: 'Paris', pointsEarned: 100, isHiddenGem: false, checkInTime: new Date(Date.now() - 86400000 * 1) },
-  ],
+  geniePoints: 0,
+  travelerRank: 'Bronze Explorer',
+  badges: [],
+  checkIns: [],
   lastDailyClaim: null
 };
 
@@ -202,30 +198,51 @@ const getLeaderboard = async (req, res) => {
 // 4. Get User Rewards Stats & Recent Check-Ins
 const getUserStats = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : 'demo_user_1';
+    const userId = req.user ? req.user.id : null;
     const isConnected = getIsConnected();
 
+    // Default fresh user stats
     let stats = {
-      geniePoints: memoryUser.geniePoints,
-      travelerRank: memoryUser.travelerRank,
-      badges: memoryUser.badges,
-      checkInsCount: memoryUser.checkIns.length,
-      checkIns: memoryUser.checkIns,
-      nextRankPoints: getNextRankThreshold(memoryUser.geniePoints)
+      geniePoints: 0,
+      points: 0,
+      travelerRank: 'Bronze Explorer',
+      rank: 'Bronze Explorer',
+      badges: [],
+      checkInsCount: 0,
+      checkIns: [],
+      nextRankPoints: 300
     };
 
-    if (isConnected && isValidObjectId(userId)) {
+    if (isConnected && userId && isValidObjectId(userId)) {
       const u = await User.findById(userId);
       if (u) {
+        const pts = u.geniePoints || 0;
+        const rankLabel = u.travelerRank || calculateRank(pts);
         stats = {
-          geniePoints: u.geniePoints || 350,
-          travelerRank: u.travelerRank || 'Silver Voyager',
-          badges: u.badges && u.badges.length > 0 ? u.badges : ['Bronze Explorer'],
+          geniePoints: pts,
+          points: pts,
+          travelerRank: rankLabel,
+          rank: rankLabel,
+          badges: u.badges && u.badges.length > 0 ? u.badges : [],
           checkInsCount: u.checkIns ? u.checkIns.length : 0,
           checkIns: u.checkIns || [],
-          nextRankPoints: getNextRankThreshold(u.geniePoints || 350)
+          nextRankPoints: getNextRankThreshold(pts)
         };
       }
+    } else {
+      // In-memory fallback
+      const pts = memoryUser.geniePoints;
+      const rankLabel = memoryUser.travelerRank;
+      stats = {
+        geniePoints: pts,
+        points: pts,
+        travelerRank: rankLabel,
+        rank: rankLabel,
+        badges: memoryUser.badges,
+        checkInsCount: memoryUser.checkIns.length,
+        checkIns: memoryUser.checkIns,
+        nextRankPoints: getNextRankThreshold(pts)
+      };
     }
 
     return res.json({ success: true, stats });
@@ -235,9 +252,74 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// 5. Award +50 points when user generates an itinerary / reaches a destination
+const awardDestinationPoints = async (req, res) => {
+  try {
+    const { destination = 'Unknown Destination' } = req.body;
+    const userId = req.user ? (req.user.id || req.user._id) : null;
+    const isConnected = getIsConnected();
+    const pointsToAdd = 50;
+    const badge = 'Expedition Planner';
+
+    let totalPoints = 0;
+    let travelerRank = 'Bronze Explorer';
+    let badges = [];
+
+    if (isConnected && userId && isValidObjectId(String(userId))) {
+      const userObj = await User.findById(userId);
+      if (userObj) {
+        userObj.geniePoints = (userObj.geniePoints || 0) + pointsToAdd;
+        userObj.travelerRank = calculateRank(userObj.geniePoints);
+        if (!userObj.badges) userObj.badges = [];
+        if (!userObj.badges.includes(badge)) userObj.badges.push(badge);
+        if (userObj.checkIns.length >= 3 && !userObj.badges.includes('Culture Maestro')) userObj.badges.push('Culture Maestro');
+        if (userObj.checkIns.length >= 7 && !userObj.badges.includes('Global Pioneer')) userObj.badges.push('Global Pioneer');
+        userObj.checkIns.unshift({
+          placeName: destination,
+          city: destination,
+          pointsEarned: pointsToAdd,
+          isHiddenGem: false,
+          checkInTime: new Date()
+        });
+        await userObj.save();
+        totalPoints = userObj.geniePoints;
+        travelerRank = userObj.travelerRank;
+        badges = userObj.badges;
+      }
+    } else {
+      memoryUser.geniePoints += pointsToAdd;
+      memoryUser.travelerRank = calculateRank(memoryUser.geniePoints);
+      if (!memoryUser.badges.includes(badge)) memoryUser.badges.push(badge);
+      memoryUser.checkIns.unshift({
+        placeName: destination,
+        city: destination,
+        pointsEarned: pointsToAdd,
+        isHiddenGem: false,
+        checkInTime: new Date()
+      });
+      totalPoints = memoryUser.geniePoints;
+      travelerRank = memoryUser.travelerRank;
+      badges = memoryUser.badges;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Expedition to ${destination} logged! +${pointsToAdd} GeniePoints earned.`,
+      pointsEarned: pointsToAdd,
+      totalPoints,
+      travelerRank,
+      badges
+    });
+  } catch (error) {
+    console.error('Award destination points error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to award destination points.' });
+  }
+};
+
 module.exports = {
   checkInPlace,
   claimDailyBonus,
   getLeaderboard,
-  getUserStats
+  getUserStats,
+  awardDestinationPoints
 };

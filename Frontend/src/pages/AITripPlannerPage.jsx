@@ -5,7 +5,7 @@ import {
   Share2, ArrowRight, BookOpen, Navigation, Train, Bus, Save, Users,
   Wallet, Clock, DollarSign, Printer, ExternalLink, Map
 } from 'lucide-react';
-import { tripService } from '../services/api';
+import { tripService, rewardService } from '../services/api';
 import JourneyMap from '../components/JourneyMap';
 
 const CITY_PRESETS = [
@@ -37,6 +37,7 @@ export default function AITripPlannerPage() {
   const [itinerary, setItinerary] = useState(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
+  const [pointsToast, setPointsToast] = useState(null); // { pts, rank }
 
   // Clear itinerary when destination changes
   const handleDestinationChange = (newDest) => {
@@ -74,6 +75,7 @@ export default function AITripPlannerPage() {
     setSaved(false);
     setError(null);
     setItinerary(null);
+    setPointsToast(null);
 
     try {
       const res = await tripService.generateItinerary({
@@ -86,6 +88,16 @@ export default function AITripPlannerPage() {
 
       if (res.data && res.data.success && res.data.itinerary) {
         setItinerary(res.data.itinerary);
+        // Award +50 GeniePoints for reaching this destination
+        try {
+          const rRes = await rewardService.awardDestination(destination.trim());
+          if (rRes.data && rRes.data.success) {
+            setPointsToast({ pts: rRes.data.pointsEarned, total: rRes.data.totalPoints, rank: rRes.data.travelerRank });
+            setTimeout(() => setPointsToast(null), 5000);
+          }
+        } catch (_) {
+          // Points award is non-critical — silently skip
+        }
       } else {
         setError(`Could not generate itinerary for "${destination.trim()}". Please try again.`);
       }
@@ -129,7 +141,21 @@ export default function AITripPlannerPage() {
   }, [initialCity]);
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="space-y-10 pb-16 relative">
+
+      {/* +50 Points Toast Notification */}
+      {pointsToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#19232d] text-white shadow-2xl border border-[#c85a44] animate-bounce-in">
+          <div className="w-9 h-9 rounded-full bg-[#c85a44] flex items-center justify-center text-base font-bold shrink-0">
+            🏆
+          </div>
+          <div>
+            <p className="text-xs font-bold text-[#c85a44] uppercase tracking-wider">GeniePoints Earned!</p>
+            <p className="text-sm font-extrabold">+{pointsToast.pts} Points → {pointsToast.total} Total</p>
+            <p className="text-[10px] text-stone-400 font-medium">{pointsToast.rank}</p>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section matching Google Stitch canvas */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">

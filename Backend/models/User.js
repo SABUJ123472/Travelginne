@@ -20,8 +20,8 @@ const userSchema = new mongoose.Schema({
   preferredBudget:      { type: String, default: 'Moderate' },
   favoriteDestinations: [{ type: String }],
   bio:                  { type: String, default: 'Passionate traveler exploring the world with TravelGenie.' },
-  geniePoints:          { type: Number, default: 350 },
-  travelerRank:         { type: String, default: 'Silver Voyager' },
+  geniePoints:          { type: Number, default: 0 },
+  travelerRank:         { type: String, default: 'Bronze Explorer' },
   badges:               [{ type: String }],
   checkIns:             [checkInSchema],
 }, { timestamps: true });

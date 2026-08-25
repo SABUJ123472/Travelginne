@@ -97,7 +97,8 @@ export const eventService = {
 export const rewardService = {
   getLeaderboard: () => api.get('/rewards/leaderboard'),
   getUserStats: () => api.get('/rewards/user-stats'),
-  checkIn: () => api.post('/rewards/check-in'),
+  checkIn: (data) => api.post('/rewards/check-in', data || {}),
+  awardDestination: (destination) => api.post('/rewards/destination', { destination }),
 };
 
 export const translatorService = {

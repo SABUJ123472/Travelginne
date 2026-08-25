@@ -12,7 +12,7 @@ const { translateText, getTravelPhrases } = require('../controllers/translatorCo
 const { navigateTransport } = require('../controllers/transportController');
 const { getNearbyPlaces, getPlaceInfo, getEmergencyContacts } = require('../controllers/nearbyController');
 const { getEvents } = require('../controllers/eventController');
-const { checkInPlace, claimDailyBonus, getLeaderboard, getUserStats } = require('../controllers/rewardController');
+const { checkInPlace, claimDailyBonus, getLeaderboard, getUserStats, awardDestinationPoints } = require('../controllers/rewardController');
 
 // Auth routes
 router.post('/auth/register', registerUser);
@@ -63,6 +63,7 @@ router.get('/events', getEvents);
 // Cell Tower Check-In & Leaderboard Rewards
 router.post('/rewards/check-in', authMiddleware, checkInPlace);
 router.post('/rewards/daily-bonus', authMiddleware, claimDailyBonus);
+router.post('/rewards/destination', authMiddleware, awardDestinationPoints);
 router.get('/rewards/leaderboard', getLeaderboard);
 router.get('/rewards/user-stats', authMiddleware, getUserStats);
 
