@@ -83,25 +83,50 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
+// Lazy DB connection middleware for Serverless (Vercel)
+let isDbConnecting = false;
+app.use(async (req, res, next) => {
+  if (!getIsConnected() && process.env.MONGODB_URI && !isDbConnecting) {
+    isDbConnecting = true;
+    try {
+      await connectDB();
+    } catch (e) {
+      console.warn('Lazy DB connection warning:', e.message);
+    } finally {
+      isDbConnecting = false;
+    }
+  }
+  next();
+});
+
 // ─── Google OAuth Routes ─────────────────────────────────────────
 app.get('/api/auth/google', (req, res, next) => {
+  const host = req.get('host');
+  const frontendUrl = process.env.FRONTEND_URL || (host && !host.includes('localhost') ? `https://${host}` : 'http://localhost:5173');
+  
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
     return res.redirect(`${frontendUrl}/login?error=google_not_configured`);
   }
-  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
 });
 
 app.get('/api/auth/google/callback', (req, res, next) => {
-  const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+  const host = req.get('host');
+  const frontendUrl = process.env.FRONTEND_URL || (host && !host.includes('localhost') ? `https://${host}` : 'http://localhost:5173');
+  
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.redirect(`${frontendUrl}/login?error=google_not_configured`);
   }
-  passport.authenticate('google', {
-    failureRedirect: `${frontendUrl}/login?error=google_failed`,
-    session: false
+
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    if (err || !user) {
+      console.error('Passport OAuth Callback Error:', err || info);
+      return res.redirect(`${frontendUrl}/login?error=google_failed`);
+    }
+    req.user = user;
+    return googleAuthCallback(req, res);
   })(req, res, next);
-}, googleAuthCallback);
+});
 // ─────────────────────────────────────────────────────────────────
 
 // API Routes
