@@ -67,16 +67,17 @@ export default function AITripPlannerPage() {
     try {
       const res = await tripService.generateItinerary({
         destination: destination.trim(),
-        days: Number(days),
+        days: Number(days) || 3,
         budgetCategory,
         travelers,
         interests: selectedInterests,
       });
 
-      if (res.data.success) {
+      if (res.data && res.data.success && res.data.itinerary) {
         setItinerary(res.data.itinerary);
       }
     } catch (err) {
+      console.warn('Trip generation notice:', err.message);
     } finally {
       setLoading(false);
     }

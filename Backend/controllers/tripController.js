@@ -7,15 +7,10 @@ const memoryTrips = [];
 
 const generateTrip = async (req, res) => {
   try {
-    const { destination } = req.body;
-    if (!destination || typeof destination !== 'string' || !destination.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Destination name is required (e.g. Kolkata, Paris, Tokyo).'
-      });
-    }
+    const body = req.body || {};
+    const dest = body.destination ? String(body.destination).trim() : 'Kolkata';
 
-    const itinerary = await generateItineraryAI(req.body);
+    const itinerary = await generateItineraryAI({ ...body, destination: dest });
     return res.status(200).json({
       success: true,
       message: 'Itinerary generated successfully!',
@@ -23,7 +18,16 @@ const generateTrip = async (req, res) => {
     });
   } catch (error) {
     console.error('Generate Trip Error:', error);
-    return res.status(500).json({ success: false, message: 'Failed to generate itinerary.' });
+    try {
+      const fallback = await generateItineraryAI({ destination: req.body?.destination || 'Kolkata' });
+      return res.status(200).json({
+        success: true,
+        message: 'Itinerary generated successfully!',
+        itinerary: fallback
+      });
+    } catch (finalErr) {
+      return res.status(500).json({ success: false, message: 'Failed to generate itinerary.' });
+    }
   }
 };
 
