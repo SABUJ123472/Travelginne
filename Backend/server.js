@@ -35,13 +35,16 @@ app.use(helmet({
 // CORS Configuration
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return callback(null, true);
-    }
+    // Allow same-origin, no-origin (mobile/curl), and localhost requests
+    if (!origin) return callback(null, true);
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return callback(null, true);
+    // Allow Vercel preview deployments and the live domain
+    if (origin.includes('vercel.app') || origin.includes('travelgenie')) return callback(null, true);
     const allowed = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
       .split(',').map(o => o.trim()).filter(Boolean);
-    if (allowed.includes(origin)) return callback(null, true);
-    if (process.env.NODE_ENV === 'production') {
+    if (allowed.some(a => origin.startsWith(a))) return callback(null, true);
+    // In production only block unknown external origins
+    if (process.env.NODE_ENV === 'production' && allowed.length > 0) {
       return callback(new Error('Not allowed by CORS'));
     }
     return callback(null, true);
@@ -174,12 +177,18 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 TravelGenie Server running on http://localhost:${PORT}`);
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`🔐 Google OAuth: http://localhost:${PORT}/api/auth/google`);
-      console.log(`✨ API Base: http://localhost:${PORT}/api`);
-    }
+// Export for Vercel serverless handler
+module.exports = app;
+
+// Only start listening when running directly (not in serverless)
+if (require.main === module) {
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 TravelGenie Server running on http://localhost:${PORT}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔐 Google OAuth: http://localhost:${PORT}/api/auth/google`);
+        console.log(`✨ API Base: http://localhost:${PORT}/api`);
+      }
+    });
   });
-});
+}
