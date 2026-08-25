@@ -36,6 +36,15 @@ export default function AITripPlannerPage() {
   const [saving, setSaving] = useState(false);
   const [itinerary, setItinerary] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Clear itinerary when destination changes
+  const handleDestinationChange = (newDest) => {
+    setDestination(newDest);
+    setItinerary(null);
+    setError(null);
+    setSaved(false);
+  };
 
   const toggleInterest = (item) => {
     setSelectedInterests(prev =>
@@ -63,6 +72,8 @@ export default function AITripPlannerPage() {
 
     setLoading(true);
     setSaved(false);
+    setError(null);
+    setItinerary(null);
 
     try {
       const res = await tripService.generateItinerary({
@@ -75,9 +86,12 @@ export default function AITripPlannerPage() {
 
       if (res.data && res.data.success && res.data.itinerary) {
         setItinerary(res.data.itinerary);
+      } else {
+        setError(`Could not generate itinerary for "${destination.trim()}". Please try again.`);
       }
     } catch (err) {
-      console.warn('Trip generation notice:', err.message);
+      console.warn('Trip generation error:', err.message);
+      setError(`Failed to reach the server. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -149,7 +163,7 @@ export default function AITripPlannerPage() {
                   type="text"
                   autoComplete="off"
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+                  onChange={(e) => handleDestinationChange(e.target.value)}
                   placeholder="e.g. Kolkata, Paris, Tokyo, Bali"
                   className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#f2eee5] border border-[#e2dad0] text-xs text-stone-900 focus:outline-none focus:border-[#d96b52]"
                 />
@@ -161,7 +175,7 @@ export default function AITripPlannerPage() {
                   <button
                     key={city}
                     type="button"
-                    onClick={() => setDestination(city)}
+                    onClick={() => handleDestinationChange(city)}
                     className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition-all ${
                       destination.toLowerCase() === city.toLowerCase()
                         ? 'bg-[#c85a44] text-white border-[#c85a44]'
@@ -338,7 +352,7 @@ export default function AITripPlannerPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs font-bold text-stone-600">
                         <Train className="w-3.5 h-3.5 text-[#c85a44]" />
-                        <span>Transit: Local Route</span>
+                        <span>Transit: {itinerary?.destination || destination} Local Routes</span>
                       </div>
                     </div>
 
@@ -364,7 +378,9 @@ export default function AITripPlannerPage() {
                         <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Archival Lore
                       </strong>
                       <p className="italic text-[11px] leading-relaxed">
-                        "Originally constructed as a heritage landmark, this location preserved timeless architecture near the entrance."
+                        {day.activities?.[0]?.description
+                          ? `"${day.activities[0].description}"`
+                          : `"Explore the cultural and historical significance of ${itinerary?.destination || destination} on Day ${idx + 1}."`}
                       </p>
                     </div>
 
@@ -375,66 +391,39 @@ export default function AITripPlannerPage() {
             ))}
           </div>
         ) : (
-          /* Initial Demo Manifest */
-          <div className="space-y-8 relative max-w-3xl mx-auto">
-            
-            {/* Day 01 */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-4 text-right pr-4">
-                <h3 className="text-xl font-heritage font-extrabold text-stone-900">Day 01</h3>
-                <span className="text-[10px] font-bold text-[#c85a44] uppercase tracking-widest block">
-                  ARRIVAL & ORIENTATION
-                </span>
+          /* Empty state — prompt user to generate */
+          <div className="max-w-xl mx-auto text-center space-y-6 py-12">
+            {error ? (
+              <div className="p-5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                ⚠️ {error}
               </div>
-
-              <div className="md:col-span-8 p-6 rounded-2xl bg-[#f5efe6] border border-[#e2dad0] space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-bold text-stone-600">
-                  <Train className="w-3.5 h-3.5 text-[#c85a44]" />
-                  <span>Transit: Historic Line 28</span>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-[#f2eee5] border-2 border-[#e2dad0] flex items-center justify-center mx-auto">
+                  <Compass className="w-7 h-7 text-[#c85a44]" />
                 </div>
-
-                <div className="space-y-1">
-                  <h4 className="text-base font-heritage font-extrabold text-stone-900">Victoria Memorial Hall</h4>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Settle into your lodgings and explore the white marble landmark surrounded by sprawling gardens and art galleries.
+                <div className="space-y-2">
+                  <h3 className="text-xl font-heritage font-extrabold text-stone-900">
+                    Ready to Chart Your Course
+                  </h3>
+                  <p className="text-xs text-stone-500 leading-relaxed">
+                    Select a destination above, choose your duration and budget, then click
+                    <span className="font-bold text-stone-700"> Draft Itinerary</span> to generate your personalised field guide.
                   </p>
                 </div>
-
-                <div className="p-4 rounded-xl bg-[#c3dec9] border border-[#a8caa7] text-xs text-[#1e3b23] space-y-1">
-                  <strong className="flex font-bold items-center gap-1 text-[#142918]">
-                    <BookOpen className="w-3.5 h-3.5 text-[#2b5934]" /> Archival Lore
-                  </strong>
-                  <p className="italic text-[11px] leading-relaxed">
-                    "Originally constructed in 1906, this iconic structure preserves grand colonial heritage."
-                  </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {CITY_PRESETS.slice(0, 5).map(city => (
+                    <button
+                      key={city}
+                      onClick={() => handleDestinationChange(city)}
+                      className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-[#f2eee5] border border-[#e2dad0] text-stone-700 hover:bg-[#c85a44] hover:text-white hover:border-[#c85a44] transition-all"
+                    >
+                      {city}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            </div>
-
-            {/* Day 02 */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-4 text-right pr-4">
-                <h3 className="text-xl font-heritage font-extrabold text-stone-900">Day 02</h3>
-                <span className="text-[10px] font-bold text-[#c85a44] uppercase tracking-widest block">
-                  HIMALAYAN FRONTIER
-                </span>
-              </div>
-
-              <div className="md:col-span-8 p-6 rounded-2xl bg-[#f5efe6] border border-[#e2dad0] space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-bold text-stone-600">
-                  <Bus className="w-3.5 h-3.5 text-[#c85a44]" />
-                  <span>Transit: Shared Mountain SUV</span>
-                </div>
-
-                <div className="space-y-1">
-                  <h4 className="text-base font-heritage font-extrabold text-stone-900">Nathula Pass & Baba Mandir</h4>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Journey through high-altitude Himalayan mountain passes along the historic Indo-China Silk Route.
-                  </p>
-                </div>
-              </div>
-            </div>
-
+              </>
+            )}
           </div>
         )}
 
