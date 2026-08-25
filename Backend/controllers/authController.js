@@ -26,8 +26,8 @@ const safeUser = (user) => ({
   travelStyle: user.travelStyle || [],
   preferredBudget: user.preferredBudget || 'Moderate',
   bio: user.bio || '',
-  geniePoints: user.geniePoints || 350,
-  travelerRank: user.travelerRank || 'Silver Voyager',
+  geniePoints: user.geniePoints ?? 0,
+  travelerRank: user.travelerRank || 'Bronze Explorer',
 });
 
 const registerUser = async (req, res) => {
@@ -81,8 +81,8 @@ const registerUser = async (req, res) => {
           travelStyle,
           preferredBudget,
           bio: 'Passionate traveler exploring the world with TravelGenie.',
-          geniePoints: 350,
-          travelerRank: 'Silver Voyager',
+          geniePoints: 0,
+          travelerRank: 'Bronze Explorer',
         };
         memoryUsers.push(user);
       }
@@ -102,8 +102,8 @@ const registerUser = async (req, res) => {
         travelStyle,
         preferredBudget,
         bio: 'Passionate traveler exploring the world with TravelGenie.',
-        geniePoints: 350,
-        travelerRank: 'Silver Voyager',
+        geniePoints: 0,
+        travelerRank: 'Bronze Explorer',
       };
       memoryUsers.push(user);
     }
@@ -219,8 +219,8 @@ const getProfile = async (req, res) => {
         preferredBudget: 'Moderate',
         favoriteDestinations: ['Kolkata', 'Jaipur', 'Goa'],
         bio: 'Avid explorer exploring hidden gems with TravelGenie AI.',
-        geniePoints: 350,
-        travelerRank: 'Silver Voyager',
+        geniePoints: 0,
+        travelerRank: 'Bronze Explorer',
       };
     }
 

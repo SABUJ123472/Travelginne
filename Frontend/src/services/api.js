@@ -71,6 +71,7 @@ export const destinationService = {
     }
     return api.get('/destinations/culture-search', { params });
   },
+  getSearchHistory: () => api.get('/destinations/search-history'),
 };
 
 export const assistantService = {

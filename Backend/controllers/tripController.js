@@ -1,16 +1,71 @@
 const Trip = require('../models/Trip');
+const SearchHistory = require('../models/SearchHistory');
 const { generateItineraryAI, optimizeItineraryAI } = require('../services/aiService');
 const { getIsConnected } = require('../config/db');
 
-// In-memory store for trips in demo mode
+// In-memory store for trips in demo mode (guests / no DB)
 const memoryTrips = [];
 
 const generateTrip = async (req, res) => {
   try {
     const body = req.body || {};
     const dest = body.destination ? String(body.destination).trim() : 'Kolkata';
+    const userId = req.user ? (req.user.id || req.user._id) : null;
+    const isConnected = getIsConnected();
 
+    // Generate the itinerary
     const itinerary = await generateItineraryAI({ ...body, destination: dest });
+
+    // ── Auto-save generated trip to MongoDB ──────────────────────
+    const daysArray = Array.isArray(itinerary.days) ? itinerary.days : [];
+    const totalBudget = Number(itinerary.customBudget || itinerary.estimatedCost) || 20000;
+    const tripData = {
+      userId: userId ? String(userId) : `guest_${Date.now()}`,
+      destination: itinerary.destination || dest,
+      startDate: body.startDate || itinerary.startDate || '',
+      endDate: body.endDate || itinerary.endDate || '',
+      travelers: Number(body.travelers) || itinerary.travelers || 2,
+      budgetType: body.budgetCategory || body.budgetType || itinerary.budgetType || 'Moderate',
+      customBudget: totalBudget,
+      travelStyles: itinerary.travelStyles || body.interests || ['Cultural'],
+      days: daysArray,
+      budgetBreakdown: itinerary.budgetBreakdown || { total: totalBudget },
+      sustainabilityScore: itinerary.sustainabilityScore || 88,
+      localScore: itinerary.localScore || 92,
+      explanation: itinerary.explanation || '',
+      createdAt: new Date()
+    };
+
+    if (isConnected) {
+      try {
+        await Trip.create(tripData);
+      } catch (dbErr) {
+        // Non-critical — don't fail the request if auto-save fails
+        console.warn('Auto-save trip warning:', dbErr.message);
+        memoryTrips.push({ _id: 'trip_' + Date.now(), ...tripData });
+      }
+    } else {
+      memoryTrips.push({ _id: 'trip_' + Date.now(), ...tripData });
+    }
+
+    // ── Log search/destination history ───────────────────────────
+    if (isConnected) {
+      try {
+        await SearchHistory.create({
+          userId: userId ? String(userId) : `guest_${Date.now()}`,
+          query: dest,
+          destination: itinerary.destination || dest,
+          daysRequested: Number(body.days || body.duration) || 3,
+          budgetCategory: body.budgetCategory || 'Moderate',
+          travelers: Number(body.travelers) || 2,
+          source: 'ai_planner',
+          resultFound: true
+        });
+      } catch (dbErr) {
+        console.warn('Search history log warning:', dbErr.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Itinerary generated successfully!',

@@ -4,7 +4,7 @@ const authMiddleware = require('../middleware/auth');
 
 const { registerUser, loginUser, getProfile, updatePreferences } = require('../controllers/authController');
 const { generateTrip, optimizeTrip, saveTrip, getMyTrips, getTripById, deleteTrip, duplicateTrip, toggleVisitedStatus } = require('../controllers/tripController');
-const { getDestinations, getHiddenGems, getCultureStories, searchCultureStory } = require('../controllers/destinationController');
+const { getDestinations, getHiddenGems, getCultureStories, searchCultureStory, getSearchHistory } = require('../controllers/destinationController');
 const { chatWithAI } = require('../controllers/assistantController');
 const { calculateBudget } = require('../controllers/budgetController');
 const { getSafetyAndWeather } = require('../controllers/safetyController');
@@ -35,6 +35,7 @@ router.get('/destinations', getDestinations);
 router.get('/destinations/hidden-gems', getHiddenGems);
 router.get('/destinations/culture-stories', getCultureStories);
 router.get('/destinations/culture-search', searchCultureStory);
+router.get('/destinations/search-history', authMiddleware, getSearchHistory);
 
 // AI Chatbot Assistant
 router.post('/assistant/chat', chatWithAI);

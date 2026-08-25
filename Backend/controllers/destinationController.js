@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { mockDestinations, mockCultureStories, mockEvents } = require('../data/mockData');
 const Destination = require('../models/Destination');
+const SearchHistory = require('../models/SearchHistory');
 const { getIsConnected } = require('../config/db');
 
 const historicalBriefs = {
@@ -42,6 +43,17 @@ const getDestinations = async (req, res) => {
     if (search) {
       const s = search.toLowerCase();
       list = list.filter(d => d.name.toLowerCase().includes(s) || d.city.toLowerCase().includes(s) || d.description.toLowerCase().includes(s));
+
+      // Record search query in SearchHistory if DB connected
+      if (getIsConnected()) {
+        const userId = req.user ? (req.user.id || req.user._id) : 'guest';
+        SearchHistory.create({
+          userId: String(userId),
+          query: search.trim(),
+          source: 'explore',
+          resultFound: list.length > 0
+        }).catch(err => console.warn('Search history logging note:', err.message));
+      }
     }
 
     if (category && category !== 'All') {
@@ -88,6 +100,17 @@ const getHiddenGems = async (req, res) => {
         d.name.toLowerCase().includes(queryTerm) ||
         d.whySpecial?.toLowerCase().includes(queryTerm)
       );
+
+      // Record hidden gem query in SearchHistory
+      if (getIsConnected()) {
+        const userId = req.user ? (req.user.id || req.user._id) : 'guest';
+        SearchHistory.create({
+          userId: String(userId),
+          query: queryTerm,
+          source: 'explore',
+          resultFound: gems.length > 0
+        }).catch(err => console.warn('Search history logging note:', err.message));
+      }
 
       if (gems.length === 0 && queryTerm.length > 2) {
         const capitalCity = queryTerm.charAt(0).toUpperCase() + queryTerm.slice(1);
@@ -271,9 +294,30 @@ const searchCultureStory = async (req, res) => {
   }
 };
 
+const getSearchHistory = async (req, res) => {
+  try {
+    const userId = req.user ? (req.user.id || req.user._id) : null;
+    const isConnected = getIsConnected();
+
+    if (!isConnected || !userId) {
+      return res.json({ success: true, history: [] });
+    }
+
+    const history = await SearchHistory.find({ userId: String(userId) })
+      .sort({ searchedAt: -1 })
+      .limit(20);
+
+    return res.json({ success: true, count: history.length, history });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch search history.' });
+  }
+};
+
 module.exports = {
   getDestinations,
   getHiddenGems,
   getCultureStories,
-  searchCultureStory
+  searchCultureStory,
+  getSearchHistory
 };
+
