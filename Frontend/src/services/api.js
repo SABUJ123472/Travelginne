@@ -98,6 +98,7 @@ export const rewardService = {
   getLeaderboard: () => api.get('/rewards/leaderboard'),
   getUserStats: () => api.get('/rewards/user-stats'),
   checkIn: (data) => api.post('/rewards/check-in', data || {}),
+  claimDailyBonus: () => api.post('/rewards/daily-bonus'),
   awardDestination: (destination) => api.post('/rewards/destination', { destination }),
 };
 

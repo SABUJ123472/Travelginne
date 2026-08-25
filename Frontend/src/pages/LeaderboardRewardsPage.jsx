@@ -7,6 +7,7 @@ export default function LeaderboardRewardsPage() {
   const [userStats, setUserStats]     = useState(null);
   const [loading, setLoading]         = useState(true);
   const [checkedIn, setCheckedIn]     = useState(false);
+  const [bonusToast, setBonusToast]   = useState(null);
 
   const fetchRewardData = async () => {
     setLoading(true);
@@ -34,16 +35,31 @@ export default function LeaderboardRewardsPage() {
 
   const handleCheckIn = async () => {
     try {
-      const res = await rewardService.checkIn();
+      // claimDailyBonus gives exactly +50 pts
+      const res = await rewardService.claimDailyBonus();
       if (res.data.success) {
         setCheckedIn(true);
+        setBonusToast({ pts: res.data.pointsEarned || 50, total: res.data.totalPoints, rank: res.data.travelerRank });
+        setTimeout(() => setBonusToast(null), 4000);
         fetchRewardData();
       }
     } catch (err) {}
   };
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="space-y-8 pb-16 relative">
+
+      {/* Daily Bonus Toast */}
+      {bonusToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#19232d] text-white shadow-2xl border border-emerald-500">
+          <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-base shrink-0">🔥</div>
+          <div>
+            <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Daily Bonus Claimed!</p>
+            <p className="text-sm font-extrabold">+{bonusToast.pts} GeniePoints → {bonusToast.total} Total</p>
+            <p className="text-[10px] text-stone-400 font-medium">{bonusToast.rank}</p>
+          </div>
+        </div>
+      )}
       
       {/* Header Banner */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#e2dad0] shadow-sm space-y-2">
@@ -74,9 +90,9 @@ export default function LeaderboardRewardsPage() {
           </div>
           <div>
             <div className="text-2xl font-heritage font-extrabold text-stone-900">
-              {userStats?.rank || 'Level 1 Explorer'}
+              {userStats?.rank || userStats?.travelerRank || 'Bronze Explorer'}
             </div>
-            <p className="text-xs text-stone-600 font-medium mt-1">Top 15% active traveler status</p>
+            <p className="text-xs text-stone-600 font-medium mt-1">Earn points to level up your rank</p>
           </div>
         </div>
 
@@ -88,9 +104,9 @@ export default function LeaderboardRewardsPage() {
           </div>
           <div>
             <div className="text-3xl font-heritage font-extrabold text-stone-900">
-              {userStats?.points || 250} PTS
+              {(userStats?.points ?? userStats?.geniePoints ?? 0)} PTS
             </div>
-            <p className="text-xs text-stone-600 font-medium mt-1">Redeemable for travel perks</p>
+            <p className="text-xs text-stone-600 font-medium mt-1">Generate trips to earn more points</p>
           </div>
         </div>
 
