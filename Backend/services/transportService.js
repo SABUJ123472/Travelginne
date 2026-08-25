@@ -202,29 +202,43 @@ const detectCity = (from, to) => {
 
 const GENERIC_PROFILE = { metro: false, bus: true, taxi: true, ferry: false, tuk_tuk: false, train: true, rickshaw: false, tram: false, boat: false };
 
-const getTransportOptions = async (from, to) => {
-  // 1. Geocode locations with LocationIQ
-  const [geoFrom, geoTo] = await Promise.all([geocode(from), geocode(to)]);
+const getTransportOptions = async (from = 'Victoria Memorial', to = 'Howrah Railway Station') => {
+  const fromStr = (typeof from === 'string' && from.trim()) ? from.trim() : 'Victoria Memorial';
+  const toStr = (typeof to === 'string' && to.trim()) ? to.trim() : 'Howrah Railway Station';
+
+  // 1. Geocode locations with OpenStreetMap / LocationIQ
+  let geoFrom = null;
+  let geoTo = null;
+  try {
+    const results = await Promise.allSettled([geocode(fromStr), geocode(toStr)]);
+    geoFrom = results[0]?.status === 'fulfilled' ? results[0].value : null;
+    geoTo = results[1]?.status === 'fulfilled' ? results[1].value : null;
+  } catch (e) {
+    console.warn('Geocoding promise note:', e.message);
+  }
 
   let roadDistanceKm = null;
   let directionsData = null;
 
   if (geoFrom && geoTo) {
-    // Try real LocationIQ Driving Directions API
-    directionsData = await getLocationIQDirections(geoFrom.lat, geoFrom.lon, geoTo.lat, geoTo.lon);
-    if (directionsData) {
-      roadDistanceKm = directionsData.distanceKm;
-    } else {
-      const dist = haversine(geoFrom.lat, geoFrom.lon, geoTo.lat, geoTo.lon);
-      roadDistanceKm = Math.round(dist * 1.35 * 10) / 10;
+    try {
+      directionsData = await getLocationIQDirections(geoFrom.lat, geoFrom.lon, geoTo.lat, geoTo.lon);
+      if (directionsData) {
+        roadDistanceKm = directionsData.distanceKm;
+      } else {
+        const dist = haversine(geoFrom.lat, geoFrom.lon, geoTo.lat, geoTo.lon);
+        roadDistanceKm = Math.round(dist * 1.35 * 10) / 10;
+      }
+    } catch (e) {
+      console.warn('Directions calculation note:', e.message);
     }
   }
 
-  const cityKey = detectCity(from, to);
+  const cityKey = detectCity(fromStr, toStr);
   const profile = cityKey ? CITY_TRANSPORT_PROFILES[cityKey] : GENERIC_PROFILE;
   const availableModes = Object.entries(profile).filter(([, val]) => val).map(([m]) => m);
 
-  const km = roadDistanceKm || 8;
+  const km = roadDistanceKm && !isNaN(roadDistanceKm) ? roadDistanceKm : 8.5;
 
   const filteredModes = availableModes.filter(mode => {
     if (mode === 'rickshaw' && km > 5) return false;

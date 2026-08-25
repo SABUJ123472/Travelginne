@@ -109,7 +109,7 @@ const TRANSPORT_BY_CITY = {
   gurgaon:    'Gurgaon Rapid Metro, Auto Rickshaw, Cab',
 };
 
-const generateItineraryAI = async (params) => {
+const generateItineraryAI = async (params = {}) => {
   const {
     destination = 'Kolkata',
     days: inputDays,
@@ -121,19 +121,30 @@ const generateItineraryAI = async (params) => {
     budgetType = 'Moderate',
     budgetCategory = 'Moderate',
     customBudget,
-    travelStyles = ['Cultural', 'Heritage'],
+    travelStyles: rawTravelStyles,
+    interests: rawInterests,
   } = params;
+
+  // Extract travelers number cleanly even if passed as "2 Travelers" or "Solo"
+  const travelerNum = typeof travelers === 'number'
+    ? travelers
+    : parseInt(String(travelers).replace(/\D/g, '')) || 2;
 
   // Explicitly extract days selection from input parameter!
   const requestedDays = inputDays || duration || inputNumDays;
   const numDays = requestedDays
-    ? Math.min(14, Math.max(1, Number(requestedDays)))
+    ? Math.min(14, Math.max(1, Number(requestedDays) || 3))
     : (startDate && endDate
         ? Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))
         : 3);
 
-  const cityName = destination.trim();
+  const cityName = (destination || 'Kolkata').trim();
   const lowerCity = cityName.toLowerCase();
+
+  const rawStyles = rawTravelStyles || rawInterests || ['Cultural', 'Heritage'];
+  const travelStyles = Array.isArray(rawStyles)
+    ? rawStyles.map(s => String(s).replace(/^[^\w\s]+/g, '').trim()).filter(Boolean)
+    : [String(rawStyles).trim()];
 
   const landmarks = WORLD_LANDMARKS[lowerCity] || [
     `${cityName} Landmark Center`,
@@ -150,14 +161,15 @@ const generateItineraryAI = async (params) => {
 
   const effBudgetCategory = budgetType || budgetCategory || 'Moderate';
   const perDayBudgetMap = { Shoestring: 2500, Budget: 2500, Moderate: 6000, Standard: 6000, Opulent: 18000, Luxury: 18000 };
-  const baseBudget = customBudget || (perDayBudgetMap[effBudgetCategory] || 6000) * numDays * travelers;
+  const baseBudget = Number(customBudget) || (perDayBudgetMap[effBudgetCategory] || 6000) * numDays * travelerNum;
 
   const days = [];
   for (let i = 0; i < numDays; i++) {
     const spot1 = landmarks[i * 2 % landmarks.length];
     const spot2 = landmarks[(i * 2 + 1) % landmarks.length];
 
-    const foodDish = localFood.split(',')[i % 3] || localFood;
+    const foodDish = typeof localFood === 'string' ? (localFood.split(',')[i % 3] || localFood) : 'Local Dish';
+    const transportMode = typeof transport === 'string' ? transport.split(',')[0] : 'Metro';
 
     const activities = [
       {
@@ -192,7 +204,7 @@ const generateItineraryAI = async (params) => {
         place: `${cityName} Evening Market`,
         time: "07:00 PM",
         activity: `Evening Cultural Market Tour`,
-        description: `Stroll through illuminated evening markets. Recommended transport: ${transport.split(',')[0]}.`,
+        description: `Stroll through illuminated evening markets. Recommended transport: ${transportMode.trim()}.`,
         location: `${spot2}, ${cityName}`,
         cost: effBudgetCategory === 'Shoestring' || effBudgetCategory === 'Budget' ? 250 : 700,
       }
@@ -217,15 +229,15 @@ const generateItineraryAI = async (params) => {
     destination: cityName,
     daysCount: numDays,
     cityCoordinates: cityCoords,
-    startDate, endDate, travelers, budgetType: effBudgetCategory,
+    startDate, endDate, travelers: travelerNum, budgetType: effBudgetCategory,
     customBudget: baseBudget,
     estimatedCost: baseBudget,
-    travelStyles,
+    travelStyles: travelStyles.length > 0 ? travelStyles : ['Cultural', 'Heritage'],
     days,
     budgetBreakdown: { accommodation, food: foodBudget, transport: transportBudget, activities: actBudget, shopping, emergency, total: baseBudget },
     sustainabilityScore: 88,
     localScore: 92,
-    explanation: `TravelGenie AI generated this ${numDays}-day itinerary for ${cityName} based on your ${effBudgetCategory} budget (₹${baseBudget.toLocaleString()}), focusing on ${travelStyles.join(', ')}.`,
+    explanation: `TravelGenie AI generated this ${numDays}-day itinerary for ${cityName} based on your ${effBudgetCategory} budget (₹${baseBudget.toLocaleString()}), focusing on ${(travelStyles.length ? travelStyles : ['Cultural', 'Heritage']).join(', ')}.`,
   };
 };
 
